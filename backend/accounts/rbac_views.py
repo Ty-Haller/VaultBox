@@ -88,17 +88,30 @@ class SignupRequestViewSet(viewsets.ReadOnlyModelViewSet):
         signup = self.get_object()
         if signup.status != SignupRequest.STATUS_PENDING:
             return Response({'error': 'Request already processed'}, status=400)
-        if User.objects.filter(username=signup.username).exists():
-            return Response({'error': 'Username already taken'}, status=400)
 
-        user = User.objects.create_user(
-            username=signup.username,
-            email=signup.email,
-            is_active=True,
-        )
-        user.set_unusable_password()
-        user.save()
-        UserProfile.objects.create(user=user, display_name=signup.display_name or signup.username)
+        if signup.created_user_id:
+            user = signup.created_user
+            if User.objects.filter(username=signup.username).exclude(pk=user.pk).exists():
+                return Response({'error': 'Username already taken'}, status=400)
+            user.username = signup.username
+            user.email = signup.email
+            user.is_active = True
+            user.set_unusable_password()
+            user.save()
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            profile.display_name = signup.display_name or signup.username
+            profile.save(update_fields=['display_name'])
+        elif User.objects.filter(username=signup.username).exists():
+            return Response({'error': 'Username already taken'}, status=400)
+        else:
+            user = User.objects.create_user(
+                username=signup.username,
+                email=signup.email,
+                is_active=True,
+            )
+            user.set_unusable_password()
+            user.save()
+            UserProfile.objects.create(user=user, display_name=signup.display_name or signup.username)
 
         global_role = request.data.get('globalRole')
         if global_role:
