@@ -13,14 +13,14 @@ from django.utils.text import slugify
 
 from administration.models import UserProfile
 from administration.sso_config import get_oauth_provider_map
-from .models import OAuthIdentity, OAuthState
+from .models import OAuthIdentity, OAuthState, SignupRequest
 
 
 @dataclass
 class OAuthFlowResult:
-    user: User
+    user: User | None
     redirect_after: str
-    mode: str  # 'login' | 'link'
+    mode: str  # 'login' | 'link' | 'pending'
 
 
 def _provider_map(request=None) -> dict[str, dict]:
@@ -129,6 +129,8 @@ def complete_oauth_flow(provider_id: str, code: str, state: str, request=None) -
     identity = OAuthIdentity.objects.filter(provider=provider_id, subject=subject).select_related('user').first()
     if identity:
         oauth_state.delete()
+        if not identity.user.is_active:
+            return OAuthFlowResult(user=None, redirect_after=redirect_after, mode='pending')
         return OAuthFlowResult(user=identity.user, redirect_after=redirect_after, mode='login')
 
     username_base = slugify(email.split('@')[0] if email else name) or f'user-{subject[:8]}'
@@ -138,15 +140,24 @@ def complete_oauth_flow(provider_id: str, code: str, state: str, request=None) -
         username = f'{username_base}-{n}'
         n += 1
 
-    user = User.objects.create_user(username=username, email=email or '')
+    user = User.objects.create_user(username=username, email=email or '', is_active=False)
     user.set_unusable_password()
     user.save()
     UserProfile.objects.create(user=user, display_name=name)
     OAuthIdentity.objects.create(
         user=user, provider=provider_id, subject=subject, email=email, display_name=name,
     )
+    signup = SignupRequest.objects.create(
+        username=username,
+        email=email or '',
+        display_name=name,
+        message=f'SSO sign-up via {_provider_name(provider_id, request)}',
+        created_user=user,
+    )
+    from administration.notification_hooks import notify_signup_request
+    notify_signup_request(signup.username, str(signup.id))
     oauth_state.delete()
-    return OAuthFlowResult(user=user, redirect_after=redirect_after, mode='login')
+    return OAuthFlowResult(user=None, redirect_after=redirect_after, mode='pending')
 
 
 def _link_oauth_identity(
