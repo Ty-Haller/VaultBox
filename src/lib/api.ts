@@ -333,9 +333,8 @@ export const api = {
     const q = search.toString() ? `?${search}` : ''
     return unwrap(await request<Secret[] | Paginated<Secret>>(`/secrets/${q}`))
   },
-  getSecret(id: string, reveal = false): Promise<Secret> {
-    const q = reveal ? '?reveal=true' : ''
-    return request(`/secrets/${id}/${q}`)
+  getSecret(id: string): Promise<Secret> {
+    return request(`/secrets/${id}/`)
   },
   createSecret(data: Partial<Secret> & { label: string; content?: string }): Promise<Secret> {
     return request('/secrets/', {

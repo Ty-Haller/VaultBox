@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from administration.models import AssetCategory, CryptoTokenType, Dealer, ProductType
 
-from .encryption import decrypt_value, encrypt_value
+from .encryption import encrypt_value
 from .models import (
     AuditLineItem,
     AuditReport,
@@ -325,9 +325,6 @@ class HoldingSerializer(serializers.ModelSerializer):
         data['valueLossAlertPct'] = _decimal(instance.value_loss_alert_pct)
         data['salePrice'] = _decimal(instance.sale_price)
         data['archivedAt'] = instance.archived_at.isoformat() if instance.archived_at else None
-        reveal = self.context.get('reveal_secrets')
-        if reveal and instance.encrypted_seed_phrase:
-            data['seedPhrase'] = decrypt_value(instance.encrypted_seed_phrase)
         return data
 
 
@@ -492,8 +489,6 @@ class SecretSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data['vaultId'] = str(instance.vault_id) if instance.vault_id else None
         data['siteId'] = str(instance.site_id) if instance.site_id else None
-        if self.context.get('reveal_secrets') and instance.encrypted_content:
-            data['content'] = decrypt_value(instance.encrypted_content)
         return data
 
 

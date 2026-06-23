@@ -113,12 +113,6 @@ class HoldingViewSet(ScopedInventoryMixin, viewsets.ModelViewSet):
     serializer_class = HoldingSerializer
     lookup_field = 'id'
 
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        if self.request.query_params.get('reveal') == 'true':
-            ctx['reveal_secrets'] = True
-        return ctx
-
     def get_queryset(self):
         qs = scope_holdings(super().get_queryset(), self.request.user)
         vault_id = self.request.query_params.get('vault')
@@ -566,12 +560,6 @@ class SecretViewSet(ScopedInventoryMixin, viewsets.ModelViewSet):
     queryset = Secret.objects.select_related('vault', 'site').prefetch_related('attachments').all()
     serializer_class = SecretSerializer
     lookup_field = 'id'
-
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        if self.request.query_params.get('reveal') == 'true':
-            ctx['reveal_secrets'] = True
-        return ctx
 
     def get_queryset(self):
         qs = scope_secrets(super().get_queryset(), self.request.user)

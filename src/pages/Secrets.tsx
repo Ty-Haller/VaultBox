@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Eye, EyeOff, FileText, Lock, Plus, Trash2, Upload } from 'lucide-react'
+import { FileText, Lock, Plus, Trash2, Upload } from 'lucide-react'
 import { useVault } from '../context/VaultContext'
 import { api } from '../lib/api'
 import type { Secret, SecretAttachment, SecretType } from '../types'
@@ -81,8 +81,6 @@ export function Secrets() {
   const { vaults, sites } = useVault()
   const [secrets, setSecrets] = useState<Secret[]>([])
   const [loading, setLoading] = useState(true)
-  const [revealed, setRevealed] = useState<Set<string>>(new Set())
-  const [revealedContent, setRevealedContent] = useState<Record<string, string>>({})
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({
     label: '',
@@ -107,23 +105,6 @@ export function Secrets() {
   useEffect(() => {
     load()
   }, [load])
-
-  const toggleReveal = async (secret: Secret) => {
-    if (revealed.has(secret.id)) {
-      setRevealed((s) => {
-        const next = new Set(s)
-        next.delete(secret.id)
-        return next
-      })
-      return
-    }
-    if (!window.confirm(
-      'Reveal encrypted secret? Only view in a secure environment. VaultBox stores secrets encrypted at rest but this is not a substitute for a hardware security module.'
-    )) return
-    const full = await api.getSecret(secret.id, true)
-    setRevealedContent((c) => ({ ...c, [secret.id]: full.content ?? '' }))
-    setRevealed((s) => new Set(s).add(secret.id))
-  }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -180,8 +161,9 @@ export function Secrets() {
       </div>
 
       <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        <strong>Security warning:</strong> Secrets are encrypted at rest using Fernet, but storing seed phrases or
-        recovery codes in any software vault carries risk. Prefer hardware wallets and offline backups.
+        <strong>Write-only storage:</strong> Encrypted secret content cannot be read back through VaultBox after
+        saving. Store a copy offline or attach a document backup. Secrets are encrypted at rest using Fernet, but
+        software vaults are not a substitute for hardware wallets.
       </div>
 
       {showForm && (
@@ -279,10 +261,10 @@ export function Secrets() {
                         )}
                       </div>
                       {secret.notes && <p className="mt-1 text-sm text-vault-500">{secret.notes}</p>}
-                      {revealed.has(secret.id) && (
-                        <pre className="mt-2 max-w-xl overflow-x-auto rounded-md bg-vault-900 p-3 font-mono text-xs text-emerald-300">
-                          {revealedContent[secret.id] || '(empty)'}
-                        </pre>
+                      {secret.hasContent && (
+                        <p className="mt-2 text-xs text-vault-500">
+                          Encrypted content stored — not retrievable via the app. Use attached documents for reference.
+                        </p>
                       )}
                     </div>
                   </div>
@@ -293,11 +275,6 @@ export function Secrets() {
                   />
                 </div>
                 <div className="flex shrink-0 gap-1">
-                  {secret.hasContent && (
-                    <button type="button" onClick={() => toggleReveal(secret)} className="rounded-md p-2 text-vault-500 hover:bg-vault-100" title="Reveal">
-                      {revealed.has(secret.id) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  )}
                   <button type="button" onClick={() => handleDelete(secret.id)} className="rounded-md p-2 text-red-500 hover:bg-red-50">
                     <Trash2 className="h-4 w-4" />
                   </button>
