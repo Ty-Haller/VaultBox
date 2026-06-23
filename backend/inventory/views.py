@@ -7,7 +7,16 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.scoping import scope_audits, scope_holdings, scope_secrets, scope_sites, scope_vaults
+from accounts.access import get_user_access
+from accounts.scoping import (
+    scope_audits,
+    scope_documents,
+    scope_holdings,
+    scope_photos,
+    scope_secrets,
+    scope_sites,
+    scope_vaults,
+)
 from administration.models import ProductType
 
 from .chain_balance import fetch_chain_balance
@@ -203,13 +212,13 @@ class HoldingViewSet(ScopedInventoryMixin, viewsets.ModelViewSet):
 
 
 class PhotoViewSet(ScopedInventoryMixin, viewsets.ModelViewSet):
-    queryset = Photo.objects.all()
+    queryset = Photo.objects.select_related('holding', 'holding__vault', 'vault', 'vault__site', 'site').all()
     serializer_class = PhotoSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     lookup_field = 'id'
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = scope_photos(super().get_queryset(), self.request.user)
         holding_id = self.request.query_params.get('holding')
         vault_id = self.request.query_params.get('vault')
         site_id = self.request.query_params.get('site')
@@ -230,13 +239,13 @@ class PhotoViewSet(ScopedInventoryMixin, viewsets.ModelViewSet):
 
 
 class DocumentViewSet(ScopedInventoryMixin, viewsets.ModelViewSet):
-    queryset = Document.objects.all()
+    queryset = Document.objects.select_related('holding', 'holding__vault', 'holding__vault__site').all()
     serializer_class = DocumentSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     lookup_field = 'id'
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = scope_documents(super().get_queryset(), self.request.user)
         holding_id = self.request.query_params.get('holding')
         if holding_id:
             qs = qs.filter(holding_id=holding_id)
@@ -245,6 +254,8 @@ class DocumentViewSet(ScopedInventoryMixin, viewsets.ModelViewSet):
 
 class PortfolioHistoryView(ReportsMixin, APIView):
     def get(self, request):
+        if not get_user_access(request.user).is_full_admin:
+            return Response([])
         snapshots = PortfolioSnapshot.objects.all()
         serializer = PortfolioSnapshotSerializer(snapshots, many=True)
         return Response(serializer.data)
@@ -641,15 +652,20 @@ class PriceHistoryView(AuthenticatedMixin, APIView):
 
 class ReportPDFView(ReportsMixin, APIView):
     def get(self, request, report_type):
+        access = get_user_access(request.user)
+        holdings_qs = scope_holdings(
+            Holding.objects.select_related('vault', 'vault__site', 'dealer'),
+            request.user,
+        )
         if report_type == 'portfolio':
+            if not access.is_full_admin:
+                return Response({'error': 'Portfolio report requires Full Admin access'}, status=status.HTTP_403_FORBIDDEN)
             pdf = portfolio_pdf(list(PortfolioSnapshot.objects.all()))
             filename = 'vaultbox-portfolio.pdf'
         elif report_type == 'inventory':
             pdf = inventory_pdf(
                 list(
-                    Holding.objects.filter(status='active')
-                    .select_related('vault')
-                    .order_by('metal_type', 'name')
+                    holdings_qs.filter(status='active').order_by('metal_type', 'name')
                 )
             )
             filename = 'vaultbox-inventory.pdf'
@@ -657,18 +673,16 @@ class ReportPDFView(ReportsMixin, APIView):
             ids = request.query_params.get('holdings', '')
             if ids:
                 id_list = [i.strip() for i in ids.split(',') if i.strip()]
-                holdings = list(Holding.objects.filter(id__in=id_list))
+                holdings = list(holdings_qs.filter(id__in=id_list))
             else:
-                holdings = list(Holding.objects.filter(status='active'))
+                holdings = list(holdings_qs.filter(status='active'))
             pdf = labels_pdf(holdings)
             filename = 'vaultbox-labels.pdf'
         elif report_type == 'purchase-sale':
             date_from = request.query_params.get('from') or None
             date_to = request.query_params.get('to') or None
             holdings = list(
-                Holding.objects.exclude(status='deleted')
-                .select_related('vault', 'dealer')
-                .order_by('name')
+                holdings_qs.exclude(status='deleted').order_by('name')
             )
             pdf = purchase_sale_pdf(holdings, date_from=date_from, date_to=date_to)
             filename = 'vaultbox-purchases-sales.pdf'
@@ -678,12 +692,12 @@ class ReportPDFView(ReportsMixin, APIView):
             include_charts = request.query_params.get('charts', '').lower() in (
                 '1', 'true', 'yes', 'on'
             )
-            holdings = list(
-                Holding.objects.exclude(status='deleted')
-                .select_related('vault', 'dealer')
-                .order_by('name')
+            holdings = list(holdings_qs.exclude(status='deleted').order_by('name'))
+            snapshots = (
+                list(PortfolioSnapshot.objects.order_by('date'))
+                if access.is_full_admin
+                else []
             )
-            snapshots = list(PortfolioSnapshot.objects.order_by('date'))
             pdf = profit_loss_pdf(
                 holdings,
                 snapshots,
