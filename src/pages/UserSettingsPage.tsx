@@ -98,6 +98,22 @@ export function UserSettingsPage() {
     }
   }
 
+  const removePasskey = async (pk: PasskeyInfo) => {
+    const isLast = passkeys.length <= 1
+    const message = isLast
+      ? 'Remove your only passkey? VaultBox requires at least one passkey per user and always keeps a Full Admin passkey in the system.'
+      : `Remove passkey "${pk.name}"? Full Admins cannot delete the last admin passkey in the system.`
+    if (!window.confirm(message)) return
+    setError(null)
+    try {
+      await authApi.deletePasskey(pk.id)
+      await load()
+      await refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not remove passkey')
+    }
+  }
+
   const createToken = async () => {
     if (!newTokenName.trim()) return
     setError(null)
@@ -275,7 +291,7 @@ export function UserSettingsPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={async () => { await authApi.deletePasskey(pk.id); await load() }}
+                  onClick={() => removePasskey(pk)}
                   className="text-vault-400 hover:text-red-500"
                   title="Remove passkey"
                 >
