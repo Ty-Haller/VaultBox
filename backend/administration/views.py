@@ -1,6 +1,12 @@
 from django.contrib.auth.models import Group, Permission, User
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 
+from accounts.access import get_user_access
+from accounts.authentication import CsrfExemptSessionAuthentication
+from accounts.permissions import CanAccessAdminConfig
+
+from .app_settings_policy import PUBLIC_SETTING_KEYS
 from .auth_mixins import AdminReadMixin, UserAdminMixin
 from .models import (
     AppSetting,
@@ -103,10 +109,22 @@ class CurrencyViewSet(AdminReadMixin, viewsets.ModelViewSet):
     lookup_field = 'id'
 
 
-class AppSettingViewSet(AdminReadMixin, viewsets.ModelViewSet):
+class AppSettingViewSet(viewsets.ModelViewSet):
+    authentication_classes = [CsrfExemptSessionAuthentication]
     queryset = AppSetting.objects.all()
     serializer_class = AppSettingSerializer
     lookup_field = 'id'
+
+    def get_permissions(self):
+        if self.action in ('create', 'update', 'partial_update', 'destroy'):
+            return [CanAccessAdminConfig()]
+        return [IsAuthenticated()]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if get_user_access(self.request.user).can_access_admin_config():
+            return qs
+        return qs.filter(key__in=PUBLIC_SETTING_KEYS)
 
 
 class NotificationOptionViewSet(AdminReadMixin, viewsets.ModelViewSet):
