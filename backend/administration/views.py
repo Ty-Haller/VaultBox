@@ -152,8 +152,9 @@ class UserViewSet(UserAdminMixin, viewsets.ModelViewSet):
         notify_user_created(user.username, user.id)
 
     def perform_destroy(self, instance):
+        from accounts.user_policy import validate_user_deletion
+        validate_user_deletion(instance)
         username = instance.username
-        user_id = instance.id
         instance.delete()
         from .notification_hooks import notify_user_deleted
         notify_user_deleted(username)

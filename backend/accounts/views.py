@@ -117,6 +117,13 @@ class PasskeyRegisterFinishView(APIView):
         return Response(PasskeySerializer(pk).data, status=201)
 
 
+def _bootstrap_user() -> User | None:
+    user = User.objects.filter(username='admin', is_active=True).first()
+    if user:
+        return user
+    return User.objects.filter(is_active=True).order_by('date_joined').first()
+
+
 class BootstrapPasskeyBeginView(APIView):
     """First-time setup when no passkeys exist in the system."""
     permission_classes = [AllowAny]
@@ -124,7 +131,7 @@ class BootstrapPasskeyBeginView(APIView):
     def post(self, request):
         if PasskeyCredential.objects.exists():
             return Response({'error': 'Bootstrap not available'}, status=403)
-        user = User.objects.filter(is_active=True).order_by('date_joined').first()
+        user = _bootstrap_user()
         if not user:
             return Response({'error': 'No users configured'}, status=404)
         options = webauthn_service.registration_options(request, user)
@@ -137,7 +144,7 @@ class BootstrapPasskeyFinishView(APIView):
     def post(self, request):
         if PasskeyCredential.objects.exists():
             return Response({'error': 'Bootstrap not available'}, status=403)
-        user = User.objects.filter(is_active=True).order_by('date_joined').first()
+        user = _bootstrap_user()
         if not user:
             return Response({'error': 'No users configured'}, status=404)
         credential = request.data.get('credential')
