@@ -84,7 +84,18 @@ export function HoldingForm({ initial, onSubmit, onCancel }: HoldingFormProps) {
   })
   const [saving, setSaving] = useState(false)
   const [chainLoading, setChainLoading] = useState(false)
+  const [chainWarning, setChainWarning] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const selectedCryptoToken = useMemo(
+    () => activeCryptoTokens.find((t) => t.id === form.cryptoTokenTypeId),
+    [activeCryptoTokens, form.cryptoTokenTypeId]
+  )
+  const chainLookupSupported = Boolean(
+    selectedCryptoToken &&
+      (['bitcoin', 'ethereum', 'dogecoin', 'litecoin'].includes((selectedCryptoToken.chain || '').toLowerCase()) ||
+        ['BTC', 'ETH', 'DOGE', 'LTC'].includes((selectedCryptoToken.symbol || '').toUpperCase()))
+  )
 
   const ac = form.assetClass
   const show = (field: Parameters<typeof isFieldVisible>[1]) => isFieldVisible(ac, field)
@@ -105,10 +116,13 @@ export function HoldingForm({ initial, onSubmit, onCancel }: HoldingFormProps) {
     }
     setChainLoading(true)
     setError(null)
+    setChainWarning(null)
     try {
       const result = await api.fetchChainBalance(form.publicAddress, token.symbol, token.chain)
       if (result.balance != null) {
         set('cryptoQuantity', result.balance)
+      } else if ((result.error ?? '').toLowerCase().includes('not supported')) {
+        setChainWarning(result.error ?? 'Chain lookup is not supported for this token.')
       } else {
         setError(result.error ?? 'Could not fetch on-chain balance')
       }
@@ -368,14 +382,26 @@ export function HoldingForm({ initial, onSubmit, onCancel }: HoldingFormProps) {
               <button
                 type="button"
                 onClick={fetchChainBalance}
-                disabled={chainLoading}
-                title="Fetch balance from blockchain"
+                disabled={chainLoading || !chainLookupSupported}
+                title={
+                  chainLookupSupported
+                    ? 'Fetch balance from blockchain'
+                    : 'On-chain lookup is only supported for BTC, ETH, DOGE, and LTC'
+                }
                 className="inline-flex shrink-0 items-center gap-1 rounded-md border border-vault-200 px-3 text-sm text-vault-600 hover:bg-vault-50 disabled:opacity-50"
               >
                 <RefreshCw className={`h-4 w-4 ${chainLoading ? 'animate-spin' : ''}`} />
                 Chain
               </button>
             </div>
+            <p className="mt-1 text-xs text-vault-500">
+              Automatic balance lookup supports Bitcoin, Ethereum, Dogecoin, and Litecoin only. Enter quantity manually for other tokens.
+            </p>
+            {chainWarning && (
+              <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                {chainWarning}
+              </p>
+            )}
           </FormField>
         )}
         {show('walletType') && (
