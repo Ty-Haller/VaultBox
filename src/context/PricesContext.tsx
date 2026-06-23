@@ -32,6 +32,7 @@ interface PricesContextValue {
   loading: boolean
   refreshing: boolean
   error: string | null
+  metalPriceSource: 'live' | 'fallback' | null
   lastUpdated: string | null
   refresh: () => Promise<void>
 }
@@ -52,6 +53,7 @@ export function PricesProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [metalPriceSource, setMetalPriceSource] = useState<'live' | 'fallback' | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
@@ -59,7 +61,7 @@ export function PricesProvider({ children }: { children: ReactNode }) {
     setError(null)
     const { crypto, stocks, forex } = enabledSymbols(tickerConfig)
     try {
-      const [metalData, cryptoData, marketData] = await Promise.all([
+      const [metalResult, cryptoData, marketData] = await Promise.all([
         fetchMetalPrices(),
         crypto.length > 0
           ? api.getCryptoPrices(crypto)
@@ -68,7 +70,8 @@ export function PricesProvider({ children }: { children: ReactNode }) {
           ? api.getMarketQuotes(stocks, forex).catch(() => ({ stocks: [], forex: [] }))
           : Promise.resolve({ stocks: [], forex: [] }),
       ])
-      setPrices(Array.isArray(metalData) ? metalData : [])
+      setPrices(metalResult.prices)
+      setMetalPriceSource(metalResult.source)
       setCryptoPrices(Array.isArray(cryptoData) ? cryptoData : [])
       setMarketQuotes(marketData)
       setLastUpdated(new Date().toISOString())
@@ -102,10 +105,11 @@ export function PricesProvider({ children }: { children: ReactNode }) {
       loading,
       refreshing,
       error,
+      metalPriceSource,
       lastUpdated,
       refresh,
     }),
-    [prices, cryptoPrices, marketQuotes, tickerConfig, tickerScrollMode, tickerItems, loading, refreshing, error, lastUpdated, refresh]
+    [prices, cryptoPrices, marketQuotes, tickerConfig, tickerScrollMode, tickerItems, loading, refreshing, error, metalPriceSource, lastUpdated, refresh]
   )
 
   return <PricesContext.Provider value={value}>{children}</PricesContext.Provider>
