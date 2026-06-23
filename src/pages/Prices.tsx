@@ -15,7 +15,7 @@ const TYPE_LABELS = {
 } as const
 
 export function Prices() {
-  const { tickerItems, tickerConfig, refreshing, error, lastUpdated, refresh } = usePrices()
+  const { tickerItems, tickerConfig, refreshing, error, metalPriceSource, lastUpdated, refresh } = usePrices()
   const enabledCount = tickerConfig.filter((c) => c.enabled).length
 
   const grouped = {
@@ -51,9 +51,12 @@ export function Prices() {
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-          {error} — showing available fallback prices where possible.
+      {(error || metalPriceSource === 'fallback') && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
+          <strong className="font-semibold">Price data warning:</strong>{' '}
+          {error
+            ? `${error} — showing available fallback prices where possible.`
+            : 'Live metal prices could not be fetched. Displayed spot values use static fallback estimates and may be inaccurate.'}
         </div>
       )}
 

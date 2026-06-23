@@ -191,6 +191,15 @@ export function PriceChartPage() {
         )}
       </div>
 
+      {(source === 'synthetic' || source === 'local') && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
+          <strong className="font-semibold">Synthetic chart data:</strong>{' '}
+          {source === 'local'
+            ? 'This chart is generated locally from the current spot price until live history loads. It is illustrative only — not actual market history.'
+            : 'Live price history was unavailable. This chart uses generated synthetic data and does not reflect real market movements.'}
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {PRICE_CHART_RANGES.map((key) => (
           <button

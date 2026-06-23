@@ -36,7 +36,9 @@ function buildPrice(metal: MetalType, spot: number): MetalPrice {
   }
 }
 
-export async function fetchMetalPrices(): Promise<MetalPrice[]> {
+export type MetalPriceSource = 'live' | 'fallback'
+
+export async function fetchMetalPrices(): Promise<{ prices: MetalPrice[]; source: MetalPriceSource }> {
   try {
     const results = await Promise.allSettled(
       (Object.keys(BASE_PRICES) as MetalType[]).map(async (metal) => {
@@ -57,12 +59,15 @@ export async function fetchMetalPrices(): Promise<MetalPrice[]> {
       .filter((r): r is PromiseFulfilledResult<MetalPrice> => r.status === 'fulfilled')
       .map((r) => r.value)
 
-    if (prices.length === 4) return prices
+    if (prices.length === 4) return { prices, source: 'live' }
   } catch {
     /* use simulated prices */
   }
 
-  return (Object.keys(BASE_PRICES) as MetalType[]).map((metal) =>
-    buildPrice(metal, jitter(BASE_PRICES[metal]))
-  )
+  return {
+    prices: (Object.keys(BASE_PRICES) as MetalType[]).map((metal) =>
+      buildPrice(metal, jitter(BASE_PRICES[metal]))
+    ),
+    source: 'fallback',
+  }
 }
