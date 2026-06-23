@@ -1,6 +1,7 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from .access import get_user_access
+from .scoping import can_write_inventory
 
 
 class IsAuthenticatedUser(BasePermission):
@@ -41,7 +42,7 @@ class ScopedInventoryPermission(BasePermission):
             return True
         if request.method in SAFE_METHODS:
             return bool(access.site_roles or access.vault_roles or access.global_role)
-        return True  # object-level checks in has_object_permission
+        return can_write_inventory(request.user, access)
 
     def has_object_permission(self, request, view, obj):
         access = get_user_access(request.user)
@@ -77,4 +78,40 @@ class ScopedInventoryPermission(BasePermission):
             return access.can_edit_vault(str(vault.id), site_id)
         if model == 'ChangeLog':
             return access.can_view_reports()
+        if model == 'Photo':
+            if request.method in SAFE_METHODS:
+                return self._can_access_photo(access, obj)
+            return self._can_edit_photo(access, obj)
+        if model == 'Document':
+            if request.method in SAFE_METHODS:
+                return self._can_access_document(access, obj)
+            return self._can_edit_document(access, obj)
         return access.is_full_admin
+
+    def _can_access_photo(self, access, obj) -> bool:
+        if obj.holding_id:
+            vault = obj.holding.vault
+            return access.can_view_vault(str(vault.id), str(vault.site_id))
+        if obj.vault_id:
+            return access.can_view_vault(str(obj.vault_id), str(obj.vault.site_id))
+        if obj.site_id:
+            return access.can_view_site(str(obj.site_id))
+        return False
+
+    def _can_edit_photo(self, access, obj) -> bool:
+        if obj.holding_id:
+            vault = obj.holding.vault
+            return access.can_edit_vault(str(vault.id), str(vault.site_id))
+        if obj.vault_id:
+            return access.can_edit_vault(str(obj.vault_id), str(obj.vault.site_id))
+        if obj.site_id:
+            return access.can_edit_site(str(obj.site_id))
+        return False
+
+    def _can_access_document(self, access, obj) -> bool:
+        vault = obj.holding.vault
+        return access.can_view_vault(str(vault.id), str(vault.site_id))
+
+    def _can_edit_document(self, access, obj) -> bool:
+        vault = obj.holding.vault
+        return access.can_edit_vault(str(vault.id), str(vault.site_id))
