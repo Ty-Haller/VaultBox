@@ -71,9 +71,14 @@ export function UserManager() {
   }
 
   const remove = async (user: AdminUser) => {
-    if (!confirm(`Delete user "${user.username}"?`)) return
-    await adminApi.delete('users', user.id)
-    await load()
+    if (!confirm(`Delete user "${user.username}"? The last Full Admin account cannot be removed.`)) return
+    setError(null)
+    try {
+      await adminApi.delete('users', user.id)
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Delete failed')
+    }
   }
 
   return (
