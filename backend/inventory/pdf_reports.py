@@ -1,6 +1,7 @@
 import io
 from datetime import date
 
+from django.utils import timezone
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -49,6 +50,14 @@ def _date_in_range(value, date_from: str | None, date_to: str | None) -> bool:
     if date_to and ds > date_to:
         return False
     return True
+
+
+def _append_data_updated(story, styles, extra: str | None = None) -> None:
+    story.append(Spacer(1, 16))
+    line = f'Data last updated: {timezone.now().strftime("%Y-%m-%d %H:%M UTC")}'
+    if extra:
+        line += f' · {extra}'
+    story.append(Paragraph(line, styles['Muted']))
 
 
 def _period_label(date_from: str | None, date_to: str | None) -> str:
@@ -176,6 +185,7 @@ def purchase_sale_pdf(
     else:
         story.append(Paragraph('No sales in this period.', styles['Normal']))
 
+    _append_data_updated(story, styles)
     doc.build(story)
     return buffer.getvalue()
 
@@ -368,6 +378,7 @@ def profit_loss_pdf(
     else:
         story.append(Paragraph('No active holdings acquired in this period.', styles['Normal']))
 
+    _append_data_updated(story, styles)
     doc.build(story)
     return buffer.getvalue()
 
@@ -407,6 +418,7 @@ def portfolio_pdf(snapshots: list[PortfolioSnapshot]) -> bytes:
     else:
         story.append(Paragraph('No portfolio history available.', styles['Normal']))
 
+    _append_data_updated(story, styles)
     doc.build(story)
     return buffer.getvalue()
 
@@ -445,6 +457,7 @@ def inventory_pdf(holdings: list[Holding]) -> bytes:
         ('ALIGN', (2, 1), (4, -1), 'RIGHT'),
     ]))
     story.append(table)
+    _append_data_updated(story, styles)
     doc.build(story)
     return buffer.getvalue()
 
@@ -485,5 +498,6 @@ def labels_pdf(holdings: list[Holding], per_page: int = 6) -> bytes:
         story.append(table)
         story.append(Spacer(1, 10))
 
+    _append_data_updated(story, styles)
     doc.build(story)
     return buffer.getvalue()
