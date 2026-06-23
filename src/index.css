@@ -1,0 +1,200 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-vault-950: #0a0f14;
+  --color-vault-900: #111b24;
+  --color-vault-800: #1a2836;
+  --color-vault-700: #243447;
+  --color-vault-600: #2f4258;
+  --color-vault-500: #3d556d;
+  --color-vault-400: #5a7a96;
+  --color-vault-300: #8aa4bc;
+  --color-vault-200: #c5d4e0;
+  --color-vault-100: #e8eef3;
+  --color-vault-50: #f4f7fa;
+
+  --color-gold-500: #d4a017;
+  --color-gold-400: #e8b923;
+  --color-gold-300: #f5d061;
+  --color-silver-400: #a8b0b8;
+  --color-platinum-400: #8e9aaf;
+  --color-palladium-400: #9aa5b1;
+
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-vault-50 text-vault-900 font-sans;
+  }
+
+  html.dark body {
+    @apply bg-vault-950 text-vault-100;
+  }
+
+  html.dark ::-webkit-scrollbar-track {
+    @apply bg-vault-800;
+  }
+
+  html.dark ::-webkit-scrollbar-thumb {
+    @apply bg-vault-600;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-vault-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-vault-400 rounded-full;
+  }
+}
+
+/*
+ * Dark-mode remaps for light-only utilities.
+ * Must live in @layer utilities (not base) so they override Tailwind utilities.
+ */
+@layer utilities {
+  html.dark .bg-white {
+    background-color: var(--color-vault-900);
+  }
+
+  html.dark .bg-vault-50,
+  html.dark .bg-vault-50\/50,
+  html.dark .bg-vault-50\/80 {
+    background-color: var(--color-vault-900);
+  }
+
+  html.dark .bg-vault-100 {
+    background-color: var(--color-vault-800);
+  }
+
+  html.dark .border-vault-100,
+  html.dark .border-vault-200 {
+    border-color: var(--color-vault-700);
+  }
+
+  html.dark .border-vault-300 {
+    border-color: var(--color-vault-600);
+  }
+
+  html.dark .divide-vault-100 > :not([hidden]) ~ :not([hidden]) {
+    border-color: var(--color-vault-700);
+  }
+
+  html.dark .text-vault-900 {
+    color: var(--color-vault-100);
+  }
+
+  html.dark .text-vault-800,
+  html.dark .text-vault-700 {
+    color: var(--color-vault-200);
+  }
+
+  html.dark .text-vault-600 {
+    color: var(--color-vault-300);
+  }
+
+  html.dark .text-vault-500 {
+    color: var(--color-vault-400);
+  }
+
+  html.dark h1,
+  html.dark h2,
+  html.dark h3,
+  html.dark h4 {
+    color: var(--color-vault-100);
+  }
+
+  html.dark input:not([type='checkbox']):not([type='radio']),
+  html.dark textarea,
+  html.dark select {
+    border-color: var(--color-vault-600);
+    background-color: var(--color-vault-800);
+    color: var(--color-vault-100);
+  }
+
+  html.dark input:not([type='checkbox']):not([type='radio'])::placeholder,
+  html.dark textarea::placeholder {
+    color: var(--color-vault-500);
+  }
+
+  html.dark .hover\:bg-vault-50:hover,
+  html.dark .hover\:bg-vault-100:hover {
+    background-color: var(--color-vault-800);
+  }
+
+  html.dark .hover\:bg-vault-200\/60:hover {
+    background-color: var(--color-vault-700);
+  }
+
+  html.dark .shadow-sm {
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+  }
+
+  html.dark .bg-amber-50 {
+    background-color: var(--color-amber-950);
+  }
+
+  html.dark .border-amber-200 {
+    border-color: var(--color-amber-800);
+  }
+
+  html.dark .text-amber-800 {
+    color: var(--color-amber-200);
+  }
+
+  html.dark .bg-red-50 {
+    background-color: var(--color-red-950);
+  }
+
+  html.dark .text-red-700 {
+    color: var(--color-red-300);
+  }
+
+  html.dark .bg-emerald-100 {
+    background-color: color-mix(in srgb, var(--color-emerald-900) 55%, transparent);
+  }
+
+  html.dark .text-emerald-700 {
+    color: var(--color-emerald-400);
+  }
+
+  html.dark .bg-red-100 {
+    background-color: color-mix(in srgb, var(--color-red-900) 55%, transparent);
+  }
+
+  html.dark .bg-amber-100 {
+    background-color: color-mix(in srgb, var(--color-amber-900) 55%, transparent);
+  }
+
+  html.dark .text-amber-700 {
+    color: var(--color-amber-300);
+  }
+
+  html.dark .bg-blue-100 {
+    background-color: color-mix(in srgb, var(--color-blue-900) 55%, transparent);
+  }
+
+  html.dark .text-blue-700 {
+    color: var(--color-blue-300);
+  }
+
+  html.dark .text-emerald-600 {
+    color: var(--color-emerald-400);
+  }
+
+  html.dark .text-red-600 {
+    color: var(--color-red-400);
+  }
+}
