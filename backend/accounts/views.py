@@ -250,6 +250,12 @@ class OAuthCallbackView(APIView):
             sep = '&' if '?' in path else '?'
             return redirect(f'{base}{path}{sep}oauth_linked=1')
 
+        if result.mode == 'pending':
+            return redirect(f'{base}/login?sso_pending=1')
+
+        if not result.user or not result.user.is_active:
+            return redirect(f'{base}/login?sso_pending=1')
+
         login(request, result.user)
         return redirect(base + path)
 
@@ -264,9 +270,8 @@ class PasskeyViewSet(viewsets.ModelViewSet):
         return PasskeyCredential.objects.filter(user=self.request.user)
 
     def perform_destroy(self, instance):
-        if PasskeyCredential.objects.filter(user=self.request.user).count() <= 1:
-            from rest_framework.exceptions import ValidationError
-            raise ValidationError('Cannot delete your only passkey')
+        from .passkey_policy import validate_passkey_deletion
+        validate_passkey_deletion(instance)
         from administration.notification_hooks import notify_passkey_removed
         name = instance.name
         user = self.request.user
