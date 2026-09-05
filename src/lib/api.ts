@@ -153,7 +153,7 @@ export const api = {
   getPortfolioHistory(): Promise<PortfolioSnapshot[]> {
     return request('/portfolio-history/')
   },
-  seedData(): Promise<{ status: string }> {
+  seedData(): Promise<{ status: string; sites: number; vaults: number; holdings: number }> {
     return request('/seed/', { method: 'POST' })
   },
 

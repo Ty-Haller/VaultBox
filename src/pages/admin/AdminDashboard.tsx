@@ -54,17 +54,28 @@ export function AdminDashboard() {
   const [resetConfirm, setResetConfirm] = useState('')
   const [resetting, setResetting] = useState(false)
   const [resetError, setResetError] = useState<string | null>(null)
+  const [resetOk, setResetOk] = useState<string | null>(null)
 
   const canReset = user?.permissions?.isFullAdmin
+  const confirmOk = resetConfirm.trim().toUpperCase() === 'RESET'
 
   const handleReset = async () => {
-    if (resetConfirm !== 'RESET' || resetting) return
+    if (resetting) return
+    if (!confirmOk) {
+      setResetOk(null)
+      setResetError('Type RESET to confirm.')
+      return
+    }
     setResetting(true)
     setResetError(null)
+    setResetOk(null)
     try {
-      await resetData()
+      const result = await resetData()
       await admin.refresh()
       setResetConfirm('')
+      setResetOk(
+        `Demo seed restored — ${result.sites} sites, ${result.vaults} vaults, ${result.holdings} holdings.`
+      )
     } catch (e) {
       setResetError(e instanceof Error ? e.message : 'Reset failed')
     } finally {
@@ -122,21 +133,32 @@ export function AdminDashboard() {
             <input
               type="text"
               value={resetConfirm}
-              onChange={(e) => setResetConfirm(e.target.value)}
+              onChange={(e) => {
+                setResetConfirm(e.target.value)
+                setResetError(null)
+                setResetOk(null)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  void handleReset()
+                }
+              }}
               placeholder="RESET"
               autoComplete="off"
               className="w-40 rounded-md border border-vault-200 bg-vault-50 px-3 py-1.5 text-sm dark:border-vault-600 dark:bg-vault-800 dark:text-white"
             />
             <button
               type="button"
-              onClick={handleReset}
-              disabled={resetConfirm !== 'RESET' || resetting}
+              onClick={() => void handleReset()}
+              disabled={resetting}
               className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {resetting ? 'Resetting…' : 'Reset to demo seed'}
             </button>
           </div>
           {resetError && <p className="mt-2 text-sm text-red-600">{resetError}</p>}
+          {resetOk && <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">{resetOk}</p>}
         </Card>
       )}
     </div>
