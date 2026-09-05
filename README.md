@@ -21,7 +21,7 @@ Passkeys (WebAuthn) are the sign-in method. Use **http://localhost:5173** — `1
 ## Quick start
 
 ```bash
-git clone https://github.com/<owner>/VaultBox.git
+git clone https://github.com/Ty-Haller/VaultBox.git
 cd VaultBox
 
 python3 -m pip install --user -r backend/requirements.txt
