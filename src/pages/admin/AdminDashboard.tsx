@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Bell,
@@ -20,6 +21,8 @@ import {
   Globe,
 } from 'lucide-react'
 import { useAdmin } from '../../context/AdminContext'
+import { useAuth } from '../../context/AuthContext'
+import { useVault } from '../../context/VaultContext'
 import { Card } from '../../components/ui/Card'
 
 const sections = [
@@ -46,6 +49,28 @@ const sections = [
 
 export function AdminDashboard() {
   const admin = useAdmin()
+  const { user } = useAuth()
+  const { resetData } = useVault()
+  const [resetConfirm, setResetConfirm] = useState('')
+  const [resetting, setResetting] = useState(false)
+  const [resetError, setResetError] = useState<string | null>(null)
+
+  const canReset = user?.permissions?.isFullAdmin
+
+  const handleReset = async () => {
+    if (resetConfirm !== 'RESET' || resetting) return
+    setResetting(true)
+    setResetError(null)
+    try {
+      await resetData()
+      await admin.refresh()
+      setResetConfirm('')
+    } catch (e) {
+      setResetError(e instanceof Error ? e.message : 'Reset failed')
+    } finally {
+      setResetting(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -86,12 +111,34 @@ export function AdminDashboard() {
         })}
       </div>
 
-      <Card>
-        <h3 className="text-sm font-semibold text-vault-700">Default Admin Account</h3>
-        <p className="mt-1 text-sm text-vault-500">
-          Username: <code className="font-mono text-vault-700">admin</code> · Password: <code className="font-mono text-vault-700">admin</code>
-        </p>
-      </Card>
+      {canReset && (
+        <Card className="bg-red-50 dark:bg-red-950/30">
+          <h3 className="text-sm font-semibold text-red-700 dark:text-red-300">Danger zone</h3>
+          <p className="mt-1 text-sm text-vault-500">
+            Replace all sites, vaults, and holdings with the demo seed. This cannot be undone.
+            Type <code className="font-mono text-vault-700 dark:text-vault-200">RESET</code> to confirm.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              value={resetConfirm}
+              onChange={(e) => setResetConfirm(e.target.value)}
+              placeholder="RESET"
+              autoComplete="off"
+              className="w-40 rounded-md border border-vault-200 bg-vault-50 px-3 py-1.5 text-sm dark:border-vault-600 dark:bg-vault-800 dark:text-white"
+            />
+            <button
+              type="button"
+              onClick={handleReset}
+              disabled={resetConfirm !== 'RESET' || resetting}
+              className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {resetting ? 'Resetting…' : 'Reset to demo seed'}
+            </button>
+          </div>
+          {resetError && <p className="mt-2 text-sm text-red-600">{resetError}</p>}
+        </Card>
+      )}
     </div>
   )
 }

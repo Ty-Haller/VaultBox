@@ -31,6 +31,10 @@ venv/
 .env.*
 !.env.example
 
+# Local Grok launcher (not part of the app)
+.grok/
+AGENTS.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

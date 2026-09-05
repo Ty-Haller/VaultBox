@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Filter } from 'lucide-react'
 import { useVault } from '../context/VaultContext'
 import { useAdmin } from '../context/AdminContext'
@@ -51,6 +51,7 @@ function matchesStatus(holding: { status?: string }, status: InventoryStatusFilt
 
 export function Inventory() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { holdings, vaults, getVault } = useVault()
   const { activeProductTypes, activeMetalTypes, activeCryptoTokens, activeAssetCategories } = useAdmin()
   const { prices, cryptoPrices } = usePrices()
@@ -60,7 +61,13 @@ export function Inventory() {
   const [statusFilter, setStatusFilter] = useState<InventoryStatusFilter>('active')
   const [vaultFilter, setVaultFilter] = useState<string>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
-  const [search, setSearch] = useState('')
+  const search = searchParams.get('q') ?? ''
+  const setSearch = (value: string) => {
+    const next = new URLSearchParams(searchParams)
+    if (value) next.set('q', value)
+    else next.delete('q')
+    setSearchParams(next, { replace: true })
+  }
   const [visibleColumns, setVisibleColumns] = useState<InventoryColumnKey[]>(loadVisibleColumns)
 
   const statusPool = useMemo(

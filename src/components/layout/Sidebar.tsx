@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   MapPin,
   QrCode,
-  RefreshCw,
   Lock,
   Settings,
   Shield,
@@ -34,7 +33,7 @@ const navItems = [
 
 export function Sidebar() {
   const { user } = useAuth()
-  const { sites, vaults, holdings, resetData } = useVault()
+  const { sites, vaults, holdings } = useVault()
   const perms = user?.permissions
 
   const visibleNav = navItems.filter((item) => {
@@ -96,18 +95,6 @@ export function Sidebar() {
             <span className="font-mono text-vault-200">{holdings.length}</span>
           </div>
         </div>
-        {perms?.isFullAdmin && (
-          <button
-            type="button"
-            onClick={() => {
-              if (confirm('Reset all data to seed defaults? This cannot be undone.')) resetData()
-            }}
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-vault-600 px-3 py-1.5 text-xs text-vault-400 transition-colors hover:border-vault-500 hover:text-vault-200"
-          >
-            <RefreshCw className="h-3 w-3" />
-            Reset Data
-          </button>
-        )}
       </div>
     </aside>
   )
