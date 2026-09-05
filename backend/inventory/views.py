@@ -311,8 +311,16 @@ class KitcoSearchView(AuthenticatedMixin, APIView):
 class SeedDataView(FullAdminMixin, APIView):
     def post(self, request):
         from django.core.management import call_command
-        call_command('seed_data', '--flush')
-        return Response({'status': 'seeded'})
+
+        from .models import Holding, Site, Vault
+
+        call_command('seed_data', flush=True)
+        return Response({
+            'status': 'seeded',
+            'sites': Site.objects.count(),
+            'vaults': Vault.objects.count(),
+            'holdings': Holding.objects.count(),
+        })
 
 
 class AuditSessionViewSet(ScopedInventoryMixin, viewsets.ModelViewSet):

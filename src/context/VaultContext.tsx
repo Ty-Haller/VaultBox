@@ -24,7 +24,7 @@ interface VaultContextValue extends VaultBoxState {
   updateHolding: (id: string, updates: Partial<Holding>) => Promise<void>
   deleteHolding: (id: string) => Promise<void>
   transactHolding: (id: string, data: HoldingTransactPayload) => Promise<Holding>
-  resetData: () => Promise<void>
+  resetData: () => Promise<{ sites: number; vaults: number; holdings: number }>
   getSite: (id: string) => Site | undefined
   getVault: (id: string) => Vault | undefined
   getHolding: (id: string) => Holding | undefined
@@ -161,8 +161,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const resetData = useCallback(async () => {
-    await api.seedData()
+    const result = await api.seedData()
     await refresh()
+    return result
   }, [refresh])
 
   const value = useMemo<VaultContextValue>(
