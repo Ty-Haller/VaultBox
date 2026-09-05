@@ -23,7 +23,7 @@ VAULT_IDS = {
 
 
 class Command(BaseCommand):
-    help = 'Seed VaultBox with demo bullion inventory data'
+    help = 'Seed VaultBox with demo hard asset inventory data'
 
     def add_arguments(self, parser):
         parser.add_argument('--flush', action='store_true', help='Delete existing data first')

@@ -79,6 +79,9 @@ export function LoginPage() {
             <Building2 className="h-7 w-7 text-gold-400" />
           </div>
           <h1 className="text-xl font-bold text-vault-900 dark:text-white">VaultBox</h1>
+          <p className="text-[10px] uppercase tracking-widest text-vault-400">
+            Hard Asset Inventory
+          </p>
           <p className="text-center text-sm text-vault-500">
             Sign in with your passkey{hasSso ? ' or SSO' : ''}.
           </p>

@@ -1,6 +1,6 @@
 # VaultBox
 
-A NetBox-inspired bullion inventory management system — React frontend + Django REST API backend.
+A NetBox-inspired hard asset inventory system — React frontend + Django REST API backend.
 
 ## Architecture
 
