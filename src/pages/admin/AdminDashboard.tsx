@@ -23,6 +23,7 @@ import {
 import { useAdmin } from '../../context/AdminContext'
 import { useAuth } from '../../context/AuthContext'
 import { useVault } from '../../context/VaultContext'
+import { api } from '../../lib/api'
 import { Card } from '../../components/ui/Card'
 
 const sections = [
@@ -50,18 +51,17 @@ const sections = [
 export function AdminDashboard() {
   const admin = useAdmin()
   const { user } = useAuth()
-  const { resetData } = useVault()
+  const { refresh } = useVault()
   const [resetConfirm, setResetConfirm] = useState('')
   const [resetting, setResetting] = useState(false)
   const [resetError, setResetError] = useState<string | null>(null)
   const [resetOk, setResetOk] = useState<string | null>(null)
 
   const canReset = user?.permissions?.isFullAdmin
-  const confirmOk = resetConfirm.trim().toUpperCase() === 'RESET'
 
   const handleReset = async () => {
     if (resetting) return
-    if (!confirmOk) {
+    if (resetConfirm.trim().toUpperCase() !== 'RESET') {
       setResetOk(null)
       setResetError('Type RESET to confirm.')
       return
@@ -70,11 +70,17 @@ export function AdminDashboard() {
     setResetError(null)
     setResetOk(null)
     try {
-      const result = await resetData()
+      const result = await api.seedData()
+      await refresh()
       await admin.refresh()
       setResetConfirm('')
+      const sites = result?.sites
+      const vaults = result?.vaults
+      const holdings = result?.holdings
       setResetOk(
-        `Demo seed restored — ${result.sites} sites, ${result.vaults} vaults, ${result.holdings} holdings.`
+        typeof sites === 'number'
+          ? `Demo seed restored — ${sites} sites, ${vaults} vaults, ${holdings} holdings.`
+          : 'Demo seed restored.'
       )
     } catch (e) {
       setResetError(e instanceof Error ? e.message : 'Reset failed')
