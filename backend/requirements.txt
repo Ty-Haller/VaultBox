@@ -9,4 +9,4 @@ apprise>=1.13.1,<2
 python-slugify>=8.0.4,<9
 cryptography>=43.0,<45
 webauthn>=2.0,<3
-authlib>=1.3,<2
+authlib>=1.8.0,<2
