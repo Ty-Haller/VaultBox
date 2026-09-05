@@ -2,6 +2,8 @@
 
 A NetBox-inspired hard asset inventory system — React frontend + Django REST API backend.
 
+VaultBox is **local-first**: you run it on your own machine (and later, on a small appliance inside the vault). It is not a public internet service.
+
 ## Architecture
 
 ```
@@ -12,13 +14,20 @@ Site → Vault → Holding
 
 ## Quick Start
 
+Open the UI at **http://localhost:5173** (not `127.0.0.1` — passkeys will fail).
+
+On first backend start Django writes a repo-root `.env` with `SECRET_KEY` and `VAULTBOX_ENCRYPTION_KEY` (mode `0600`). Do not commit `.env`. See `.env.example`.
+
 ### 1. Backend (Django REST API)
 
 ```bash
 cd backend
 python3 -m pip install --user -r requirements.txt
 python3 manage.py migrate
-python3 manage.py seed_data --flush
+python3 manage.py seed_roles
+python3 manage.py seed_admin
+python3 manage.py seed_notifications
+python3 manage.py seed_data          # optional demo holdings; --flush replaces inventory
 python3 manage.py runserver
 ```
 
@@ -31,19 +40,35 @@ npm install
 npm run dev
 ```
 
-App runs at **http://localhost:5173/** (proxies `/api` and `/media` to Django)
+First visit **http://localhost:5173/login** and **Register Admin Passkey** for user `admin`. There is no password login.
+
+### Existing database (alpha hardcoded keys)
+
+If this tree already has a `backend/db.sqlite3` encrypted with the old in-repo keys, copy them into `.env` once before generating new ones — otherwise secrets, seed phrases, and wrapped backup passwords will not decrypt:
+
+```
+SECRET_KEY=django-insecure-vaultbox-dev-key-change-in-production
+VAULTBOX_ENCRYPTION_KEY=vaultbox-dev-fernet-key-change-in-prod!!
+```
+
+Changing `VAULTBOX_ENCRYPTION_KEY` later has the same effect.
 
 ## Features
 
+- **Passkeys** — WebAuthn sign-in (optional SSO)
 - **Admin Area** — NetBox-style model configuration (`/admin`)
 - **Full CRUD** — Sites, Vaults, Holdings with dedicated form pages
 - **REST API** — Django REST Framework with UUID primary keys
 - **Photos** — Upload images to sites, vaults, or holdings
 - **Documents** — Attach invoices, certificates, assay reports (PDF/images)
-- **PDF Reports** — Portfolio, inventory, and QR label sheet exports
+- **Audits** — Standard and advanced vault counts; cancelable sessions
+- **PDF Reports** — Portfolio, inventory, QR labels, purchase/sale, profit & loss
+- **CSV export** — Inventory and report tables
 - **QR Codes** — Auto-generated per holding; scan to lookup via `/lookup/:code`
-- **Live Prices** — Gold, silver, platinum, palladium spot prices
+- **Live Prices** — Gold, silver, platinum, palladium (plus ticker crypto/stocks)
 - **Charts** — Portfolio history, metal allocation, vault distribution
+- **Backups** — On-demand and scheduled SQLite + media archives
+- **Secrets** — Encrypted seed phrases and recovery data per vault
 
 ## Administration (`/admin`)
 
@@ -65,7 +90,7 @@ Configure all lookup models via the UI or API:
 | Users | `/admin/users` | User accounts |
 | Groups | `/admin/groups` | Roles & permissions |
 
-Default admin: `admin` / `admin` (seeded via `python3 manage.py seed_admin`)
+First-time login is passkey bootstrap for `admin` (see Quick Start). `seed_admin` only seeds lookup tables and app config:
 
 ```bash
 python3 manage.py seed_admin   # seed admin config (first run only)
@@ -85,7 +110,7 @@ python3 manage.py seed_admin   # seed admin config (first run only)
 | POST | `/api/photos/` | Upload photo (multipart) |
 | POST | `/api/documents/` | Upload document (multipart) |
 | GET | `/api/lookup/{code}/` | QR code lookup |
-| GET | `/api/reports/{type}.pdf` | PDF export (portfolio/inventory/labels) |
+| GET | `/api/reports/{type}.pdf` | PDF export (portfolio/inventory/labels/purchase-sale/profit-loss) |
 | GET | `/api/portfolio-history/` | Historical snapshots |
 | POST | `/api/seed/` | Reset to seed data |
 | GET/POST | `/api/admin/site-types/` | Site type config |
@@ -139,7 +164,7 @@ Enable the schedule and set retention/encryption in **Admin → Backups → Sche
 ### Encryption keys
 
 - **Backup file password** — chosen per backup or for scheduled encryption; required to decrypt `.vaultbox` files.
-- **`VAULTBOX_ENCRYPTION_KEY`** — Django setting used to wrap the scheduled encryption password in the database (Fernet). Set a strong random value in production and keep it backed up; changing it invalidates stored schedule passwords.
+- **`VAULTBOX_ENCRYPTION_KEY`** — loaded from `.env` / the environment. Used to wrap scheduled backup passwords and holding secrets (Fernet). Keep `.env` backed up with the database; changing the key invalidates stored ciphertext.
 
 ### Restore
 

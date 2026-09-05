@@ -1,11 +1,66 @@
+import os
+import secrets
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+REPO_ROOT = BASE_DIR.parent
+ENV_FILE = REPO_ROOT / '.env'
 
-SECRET_KEY = 'django-insecure-vaultbox-dev-key-change-in-production'
 
-# Fernet key for encrypting secrets and seed phrases at rest (dev default — rotate in production)
-VAULTBOX_ENCRYPTION_KEY = 'vaultbox-dev-fernet-key-change-in-prod!!'
+def _parse_env_file(path: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    if not path.is_file():
+        return values
+    for raw in path.read_text(encoding='utf-8').splitlines():
+        line = raw.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        key, _, value = line.partition('=')
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key:
+            values[key] = value
+    return values
+
+
+def _write_env_updates(path: Path, updates: dict[str, str]) -> None:
+    lines: list[str] = []
+    seen: set[str] = set()
+    if path.is_file():
+        lines = path.read_text(encoding='utf-8').splitlines()
+    out: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped and not stripped.startswith('#') and '=' in stripped:
+            key = stripped.split('=', 1)[0].strip()
+            if key in updates:
+                out.append(f'{key}={updates[key]}')
+                seen.add(key)
+                continue
+        out.append(line)
+    for key, value in updates.items():
+        if key not in seen:
+            out.append(f'{key}={value}')
+    path.write_text('\n'.join(out) + '\n', encoding='utf-8')
+    os.chmod(path, 0o600)
+
+
+def _load_secret(name: str) -> str:
+    value = os.environ.get(name, '').strip()
+    if value:
+        return value
+    generated = secrets.token_urlsafe(48)
+    os.environ[name] = generated
+    _write_env_updates(ENV_FILE, {name: generated})
+    return generated
+
+
+for _key, _val in _parse_env_file(ENV_FILE).items():
+    if _val:
+        os.environ.setdefault(_key, _val)
+
+SECRET_KEY = _load_secret('SECRET_KEY')
+VAULTBOX_ENCRYPTION_KEY = _load_secret('VAULTBOX_ENCRYPTION_KEY')
 
 DEBUG = True
 
