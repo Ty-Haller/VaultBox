@@ -29,6 +29,9 @@ export function SignupPage() {
         <div className="mb-6 flex flex-col items-center gap-2">
           <Building2 className="h-8 w-8 text-gold-400" />
           <h1 className="text-xl font-bold text-vault-900 dark:text-white">Request VaultBox Access</h1>
+          <p className="text-[10px] uppercase tracking-widest text-vault-400">
+            Hard Asset Inventory
+          </p>
           <p className="text-center text-sm text-vault-600 dark:text-vault-400">
             Submit a request for a Full Admin to review. If approved, you&apos;ll receive a one-time link to set up your passkey.
           </p>

@@ -54,7 +54,7 @@ export function Sidebar() {
           <div>
             <h1 className="text-base font-bold text-white">VaultBox</h1>
             <p className="text-[10px] uppercase tracking-widest text-vault-400">
-              Bullion DCIM
+              Hard Asset Inventory
             </p>
           </div>
         </div>

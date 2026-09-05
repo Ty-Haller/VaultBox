@@ -55,7 +55,7 @@ export function HoldingFormPage() {
             {isEdit ? 'Edit Holding' : 'Add Holding'}
           </h2>
           <p className="text-sm text-vault-500">
-            {isEdit ? holding?.name : 'Create a new bullion inventory record'}
+            {isEdit ? holding?.name : 'Create a new hard asset inventory record'}
           </p>
         </div>
       </div>
