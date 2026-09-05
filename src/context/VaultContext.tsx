@@ -163,7 +163,11 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const resetData = useCallback(async () => {
     const result = await api.seedData()
     await refresh()
-    return result
+    return {
+      sites: result?.sites ?? 0,
+      vaults: result?.vaults ?? 0,
+      holdings: result?.holdings ?? 0,
+    }
   }, [refresh])
 
   const value = useMemo<VaultContextValue>(
