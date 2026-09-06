@@ -12,7 +12,7 @@ from .backup_views import (
     BackupStorageInfoView,
     BackupUploadRestoreView,
 )
-from .site_views import SiteConfigView
+from .site_views import SiteConfigView, StalePasskeyView
 from .sso_views import SsoConfigView
 from .notification_views import (
     MarketAlertConfigView,
@@ -69,6 +69,7 @@ urlpatterns = [
     path('backups/<uuid:backup_id>/restore/', BackupRestoreView.as_view(), name='backup-restore'),
     path('notification-defaults/reset/', NotificationDefaultsResetView.as_view(), name='notification-defaults-reset'),
     path('site/', SiteConfigView.as_view(), name='site-config'),
+    path('stale-passkeys/', StalePasskeyView.as_view(), name='stale-passkeys'),
     path('sso/', SsoConfigView.as_view(), name='sso-config'),
     path('notification-delivery/', NotificationDeliveryView.as_view(), name='notification-delivery'),
     path('notification-catalog/', NotificationOptionListView.as_view(), name='notification-catalog'),
