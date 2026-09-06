@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser'
-import { Building2, Fingerprint, KeyRound, Shield } from 'lucide-react'
+import { Fingerprint, KeyRound, Shield } from 'lucide-react'
+import { LogoMark } from '../components/brand/LogoMark'
 import { authApi, type OAuthProvider } from '../lib/authApi'
 import { useAuth } from '../context/AuthContext'
 
@@ -75,9 +76,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-vault-50 px-4 dark:bg-vault-950">
       <div className="w-full max-w-md rounded-xl border border-vault-200 bg-white p-8 shadow-lg dark:border-vault-700 dark:bg-vault-900">
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gold-500/20">
-            <Building2 className="h-7 w-7 text-gold-400" />
-          </div>
+          <LogoMark className="h-14 w-14 rounded-xl" />
           <h1 className="text-xl font-bold text-vault-900 dark:text-white">VaultBox</h1>
           <p className="text-[10px] uppercase tracking-widest text-vault-400">
             Hard Asset Inventory

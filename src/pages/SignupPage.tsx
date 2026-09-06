@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Building2, UserPlus } from 'lucide-react'
+import { UserPlus } from 'lucide-react'
+import { LogoMark } from '../components/brand/LogoMark'
 import { authApi } from '../lib/authApi'
 import { FormField, inputClass } from '../components/ui/FormField'
 
@@ -27,7 +28,7 @@ export function SignupPage() {
     <div className="flex min-h-screen items-center justify-center bg-vault-50 px-4 dark:bg-vault-950">
       <div className="w-full max-w-md rounded-xl border border-vault-200 bg-white p-8 shadow-lg dark:border-vault-700 dark:bg-vault-900">
         <div className="mb-6 flex flex-col items-center gap-2">
-          <Building2 className="h-8 w-8 text-gold-400" />
+          <LogoMark className="h-14 w-14 rounded-xl" />
           <h1 className="text-xl font-bold text-vault-900 dark:text-white">Request VaultBox Access</h1>
           <p className="text-[10px] uppercase tracking-widest text-vault-400">
             Hard Asset Inventory

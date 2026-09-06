@@ -1,5 +1,9 @@
 # VaultBox
 
+<p align="left">
+  <img src="docs/brand/logo.png" alt="VaultBox" width="72" height="72">
+</p>
+
 **Hard asset inventory** for bullion, crypto, and other vaulted goods. Local-first: you run it on your machine (later, on a small appliance inside the vault). It is not a public internet service.
 
 Status: **0.1.0-beta** · private
