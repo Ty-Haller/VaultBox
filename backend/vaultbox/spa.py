@@ -1,7 +1,7 @@
 """Serve the Vite production build for non-API routes."""
 
 from django.conf import settings
-from django.http import FileResponse, HttpResponse
+from django.http import HttpResponse
 
 
 def index(request, path=None):
@@ -12,6 +12,7 @@ def index(request, path=None):
             status=503,
             content_type='text/plain',
         )
-    response = FileResponse(index_path.open('rb'), content_type='text/html; charset=utf-8')
+    html = index_path.read_bytes()
+    response = HttpResponse(html, content_type='text/html; charset=utf-8')
     response['Cache-Control'] = 'no-cache'
     return response

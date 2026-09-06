@@ -10,7 +10,7 @@ COPY src ./src
 COPY public ./public
 RUN npm run build
 
-FROM python:3.12-bookworm-slim
+FROM python:3.12-slim-bookworm
 WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
