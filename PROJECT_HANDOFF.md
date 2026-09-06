@@ -1,7 +1,7 @@
 # VaultBox — Session Handoff
 
 **Last updated:** 2026-09-06  
-**Status:** Local-first hard asset inventory. Not a public internet host. A vault IoT appliance is a later phase.
+**Status:** Local-first hard asset inventory. Not a public internet host.
 
 Use this file to resume work. `README.md` is the operator guide.
 
@@ -11,8 +11,7 @@ Use this file to resume work. `README.md` is the operator guide.
 
 VaultBox: Site → Vault → Holding. React 19 + Vite UI, Django 6 REST API, SQLite.
 
-- **Short term:** operators run it on localhost. UI **http://localhost:5173** (passkeys fail on `127.0.0.1`).
-- **Long term:** a small appliance that lives inside the vault (offline-first image of this same tree). Not started.
+- Operators run it on localhost. UI **http://localhost:5173** (passkeys fail on `127.0.0.1`).
 
 Version: `0.1.0-beta` (`package.json`).
 
@@ -67,7 +66,7 @@ Existing DBs encrypted with the old in-repo defaults must copy those two strings
 
 ## Remaining (not this local beta)
 
-- Vault appliance (hardware, offline prices, non-localhost WebAuthn RP ID)
+- Non-localhost WebAuthn RP ID / hostname from env
 - `DEBUG=False` / CSRF enforcement / Docker — wait until something leaves localhost
 - Tests / CI / LICENSE
 - `api_rate_limit` is still an unused setting

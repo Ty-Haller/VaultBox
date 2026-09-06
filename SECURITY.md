@@ -1,6 +1,6 @@
 # Security
 
-VaultBox is a **local-first** inventory app. Treat the machine (and later the vault appliance) as the trust boundary.
+VaultBox is a **local-first** inventory app. Treat the machine that runs it as the trust boundary.
 
 ## Secrets
 

@@ -4,7 +4,7 @@
   <img src="docs/brand/logo.png" alt="VaultBox" width="72" height="72">
 </p>
 
-**Hard asset inventory** for bullion, crypto, and other vaulted goods. Local-first: you run it on your machine (later, on a small appliance inside the vault). It is not a public internet service.
+**Hard asset inventory** for bullion, crypto, and other vaulted goods. Local-first: you run it on your machine. It is not a public internet service.
 
 Status: **0.1.0-beta** · private
 
@@ -156,4 +156,4 @@ Authenticated JSON at `/api/`. UUID primary keys.
 
 ## Security
 
-See [SECURITY.md](SECURITY.md). This tree is meant to stay on localhost or a private appliance — not on the public internet.
+See [SECURITY.md](SECURITY.md). This tree is meant to stay on localhost or a private network — not on the public internet.
