@@ -15,10 +15,11 @@ from .models import (
 class PasskeySerializer(serializers.ModelSerializer):
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     lastUsedAt = serializers.DateTimeField(source='last_used_at', read_only=True)
+    rpId = serializers.CharField(source='rp_id', read_only=True)
 
     class Meta:
         model = PasskeyCredential
-        fields = ['id', 'name', 'createdAt', 'lastUsedAt']
+        fields = ['id', 'name', 'rpId', 'createdAt', 'lastUsedAt']
         read_only_fields = fields
 
 

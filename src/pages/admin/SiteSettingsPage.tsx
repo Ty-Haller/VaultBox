@@ -33,6 +33,7 @@ export function SiteSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [enrollAfterChange, setEnrollAfterChange] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -65,13 +66,14 @@ export function SiteSettingsPage() {
   const save = async () => {
     if (rpIdWillChange) {
       const ok = window.confirm(
-        `This changes the passkey RP ID from "${config?.webauthnRpId}" to "${draftRpId}". Existing passkeys will stop working until each user re-registers. Continue?`,
+        `This changes the passkey RP ID from "${config?.webauthnRpId}" to "${draftRpId}".\n\nExisting passkeys will not work at the new host — including yours. After save, open the new App URL and register a new admin passkey (login will offer bootstrap). Keep this session open until that succeeds if you may need to revert.\n\nContinue?`,
       )
       if (!ok) return
     }
     setSaving(true)
     setError(null)
     setSuccess(null)
+    setEnrollAfterChange(null)
     try {
       const updated = await adminApi.updateSiteConfig({
         hostname: hostname.trim(),
@@ -80,8 +82,14 @@ export function SiteSettingsPage() {
       setConfig(updated)
       setHostname(updated.hostname)
       setUseHttps(updated.useHttps)
-      setSuccess('Hostname saved. Restart Django after changing .env; reverse proxies may also need a restart.')
-      setTimeout(() => setSuccess(null), 8000)
+      if (rpIdWillChange) {
+        const loginUrl = `${updated.frontendBaseUrl.replace(/\/$/, '')}/login`
+        setEnrollAfterChange(loginUrl)
+        setSuccess(null)
+      } else {
+        setSuccess('Hostname saved. Restart Django after changing .env; reverse proxies may also need a restart.')
+        setTimeout(() => setSuccess(null), 8000)
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed')
     } finally {
@@ -123,13 +131,28 @@ export function SiteSettingsPage() {
       </div>
 
       <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-        Passkeys are bound to the RP ID. Changing hostname (or <code className="font-mono">VAULTBOX_HOSTNAME</code>)
-        invalidates existing passkeys until each user re-registers. Open VaultBox at the App URL below — the browser
-        host must match.
+        Passkeys are bound to the RP ID. After a hostname change, open the new App URL and{' '}
+        <strong>register a new admin passkey</strong> (login offers bootstrap because this host has no keys yet).
+        Old passkeys keep working only if you revert to the previous host. Keep this session open until the new key
+        is enrolled if you may need to revert.
       </div>
 
       {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       {success && <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{success}</p>}
+      {enrollAfterChange && (
+        <div className="rounded-lg border border-gold-500/40 bg-gold-500/10 px-4 py-3 text-sm text-vault-900 dark:text-vault-100">
+          <p className="font-semibold">Enroll a passkey at the new host before you sign out</p>
+          <p className="mt-1">
+            This session still works here. Existing passkeys will not authenticate at the new RP ID.
+            Open this URL on the new hostname and register an admin passkey:
+          </p>
+          <p className="mt-2 break-all font-mono text-gold-700 dark:text-gold-300">{enrollAfterChange}</p>
+          <p className="mt-2 text-xs text-vault-600 dark:text-vault-400">
+            Login will show “Register Admin Passkey” until this host has a key. Other users enroll from Settings after
+            an admin signs in, or via a setup-passkey link.
+          </p>
+        </div>
+      )}
 
       {config && (
         <Card>

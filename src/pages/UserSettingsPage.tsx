@@ -287,6 +287,7 @@ export function UserSettingsPage() {
                   <p className="text-xs text-vault-500">
                     Added {new Date(pk.createdAt).toLocaleDateString()}
                     {pk.lastUsedAt && ` · Last used ${new Date(pk.lastUsedAt).toLocaleDateString()}`}
+                    {pk.rpId && ` · host ${pk.rpId}`}
                   </p>
                 </div>
                 <button
