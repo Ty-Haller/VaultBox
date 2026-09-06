@@ -1,0 +1,24 @@
+services:
+  vaultbox:
+    build: .
+    image: vaultbox:local
+    ports:
+      - "${VAULTBOX_HTTP_PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      VAULTBOX_DATA_DIR: /data
+      VAULTBOX_ENV_FILE: /data/.env
+      VAULTBOX_SINGLE_ORIGIN: "true"
+      VAULTBOX_DEBUG: "false"
+      VAULTBOX_HOSTNAME: ${VAULTBOX_HOSTNAME:-localhost}
+      VAULTBOX_USE_HTTPS: ${VAULTBOX_USE_HTTPS:-false}
+      VAULTBOX_HTTP_PORT: ${VAULTBOX_HTTP_PORT:-8000}
+      VAULTBOX_SEED_DATA: ${VAULTBOX_SEED_DATA:-}
+    volumes:
+      - vaultbox-data:/data
+    restart: unless-stopped
+
+volumes:
+  vaultbox-data:

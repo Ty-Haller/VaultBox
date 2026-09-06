@@ -16,6 +16,8 @@ dist-ssr
 backend/backups/
 backend/db.sqlite3
 backend/media/
+backend/staticfiles/
+backend/frontend_dist/
 
 # Python
 __pycache__/

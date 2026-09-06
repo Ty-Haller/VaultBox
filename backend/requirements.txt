@@ -10,3 +10,5 @@ python-slugify>=8.0.4,<9
 cryptography>=50.0.1,<51
 webauthn>=3.0.0,<4
 authlib>=1.8.0,<2
+gunicorn>=23,<24
+whitenoise>=6.9,<7

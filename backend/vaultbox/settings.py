@@ -4,6 +4,7 @@ from pathlib import Path
 
 from vaultbox.host_env import (
     backend_base_url as _backend_base_url,
+    env_bool,
     env_hostname,
     env_use_https,
     frontend_base_url as _frontend_base_url,
@@ -14,7 +15,8 @@ from vaultbox.host_env import (
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 REPO_ROOT = BASE_DIR.parent
-ENV_FILE = REPO_ROOT / '.env'
+_env_override = os.environ.get('VAULTBOX_ENV_FILE', '').strip()
+ENV_FILE = Path(_env_override) if _env_override else REPO_ROOT / '.env'
 
 
 def _parse_env_file(path: Path) -> dict[str, str]:
@@ -72,11 +74,16 @@ for _key, _val in _parse_env_file(ENV_FILE).items():
 SECRET_KEY = _load_secret('SECRET_KEY')
 VAULTBOX_ENCRYPTION_KEY = _load_secret('VAULTBOX_ENCRYPTION_KEY')
 
-DEBUG = True
+DEBUG = env_bool('VAULTBOX_DEBUG', True)
+
+_data_dir = os.environ.get('VAULTBOX_DATA_DIR', '').strip()
+DATA_DIR = Path(_data_dir).resolve() if _data_dir else BASE_DIR
+if _data_dir:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 VAULTBOX_HOSTNAME = env_hostname()
 VAULTBOX_USE_HTTPS = env_use_https()
-_admin_host, _admin_https = load_admin_override(BASE_DIR / 'db.sqlite3')
+_admin_host, _admin_https = load_admin_override(DATA_DIR / 'db.sqlite3')
 _boot_host = _admin_host or VAULTBOX_HOSTNAME
 _boot_https = _admin_https if _admin_host else VAULTBOX_USE_HTTPS
 ALLOWED_HOSTS, CORS_ALLOWED_ORIGINS = hosts_and_origins(_boot_host, _boot_https)
@@ -97,6 +104,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -128,7 +136,7 @@ WSGI_APPLICATION = 'vaultbox.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': DATA_DIR / 'db.sqlite3',
     }
 }
 
@@ -146,11 +154,27 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+FRONTEND_DIST = BASE_DIR / 'frontend_dist'
+if FRONTEND_DIST.is_dir():
+    WHITENOISE_ROOT = FRONTEND_DIST
+
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': (
+            'django.contrib.staticfiles.storage.StaticFilesStorage'
+            if DEBUG
+            else 'whitenoise.storage.CompressedStaticFilesStorage'
+        ),
+    },
+}
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = DATA_DIR / 'media'
 
-BACKUP_ROOT = BASE_DIR / 'backups'
+BACKUP_ROOT = DATA_DIR / 'backups'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -176,6 +200,9 @@ BACKEND_BASE_URL = _backend_base_url(_boot_host or 'localhost', _boot_https)
 CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS)
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_HTTPONLY = True
+if VAULTBOX_USE_HTTPS:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # WebAuthn / Passkey configuration (derived from hostname; Admin may override at runtime)
 WEBAUTHN_RP_ID = rp_id_for(_boot_host or 'localhost')

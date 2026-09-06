@@ -64,6 +64,20 @@ def env_use_https() -> bool:
     return env_bool('VAULTBOX_USE_HTTPS', False)
 
 
+def env_single_origin() -> bool:
+    """True when Django serves the UI (Docker). False keeps Vite :5173 / Django :8000."""
+    return env_bool('VAULTBOX_SINGLE_ORIGIN', False)
+
+
+def env_public_port() -> int | None:
+    raw = os.environ.get('VAULTBOX_HTTP_PORT', '').strip()
+    if raw.isdigit():
+        port = int(raw)
+        if 1 <= port <= 65535:
+            return port
+    return None
+
+
 def rp_id_for(hostname: str) -> str:
     host = normalize_hostname(hostname) or 'localhost'
     if host == '127.0.0.1' or host == '::1':
@@ -84,12 +98,19 @@ def frontend_base_url(hostname: str, use_https: bool) -> str:
     if host == '127.0.0.1':
         host = 'localhost'
     scheme = 'https' if use_https else 'http'
+    if env_single_origin():
+        port = env_public_port()
+        if port is None:
+            port = 443 if use_https else 80
+        return _with_port(scheme, host, port)
     if is_dev_hostname(host):
         return _with_port(scheme, host, 5173)
     return _with_port(scheme, host, 443 if use_https else 80)
 
 
 def backend_base_url(hostname: str, use_https: bool) -> str:
+    if env_single_origin():
+        return frontend_base_url(hostname, use_https)
     host = normalize_hostname(hostname) or 'localhost'
     if is_dev_hostname(host):
         return 'http://127.0.0.1:8000'
@@ -131,8 +152,10 @@ def hosts_and_origins(hostname: str, use_https: bool) -> tuple[list[str], list[s
         'http://localhost:5173',
         'http://127.0.0.1:5173',
     }
-    if host:
-        origins.add(frontend_base_url(host, use_https))
-        if use_https and is_dev_hostname(host):
-            origins.add(frontend_base_url(host, False))
+    fe = frontend_base_url(host or 'localhost', use_https)
+    be = backend_base_url(host or 'localhost', use_https)
+    origins.add(fe)
+    origins.add(be)
+    if use_https and is_dev_hostname(host or 'localhost') and not env_single_origin():
+        origins.add(frontend_base_url(host or 'localhost', False))
     return sorted(hosts), sorted(origins)
