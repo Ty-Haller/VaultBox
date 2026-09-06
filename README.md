@@ -14,15 +14,34 @@ Site → Vault → Holding
       Photos    Photos + documents + QR labels
 ```
 
-Passkeys (WebAuthn) are the sign-in method. Use **http://localhost:5173** — `127.0.0.1` will fail passkey registration.
+Passkeys (WebAuthn) are the sign-in method. Use **http://localhost:5173** in development, or the Docker App URL — `127.0.0.1` will fail passkey registration.
 
 ## Requirements
 
-- Python 3.11+
-- Node.js 20+
+- **Docker** (recommended install), or Python 3.11+ and Node.js 20+
 - A browser that supports passkeys
 
-## Quick start
+## Install with Docker
+
+From a clone (repo is private — you need access):
+
+```bash
+git clone https://github.com/Ty-Haller/VaultBox.git
+cd VaultBox
+chmod +x scripts/bootstrap.sh
+./scripts/bootstrap.sh
+```
+
+The script builds the image, writes `.env` if missing, and publishes the app (default **http://localhost:8000**). Open that URL and **Register Admin Passkey**. Data lives in the Docker volume `vaultbox-data`.
+
+```bash
+docker logs -f vaultbox    # logs
+docker stop vaultbox       # stop
+```
+
+Or: `docker compose up --build -d` after copying [`.env.example`](.env.example) to `.env`.
+
+## Quick start (development)
 
 ```bash
 git clone https://github.com/Ty-Haller/VaultBox.git

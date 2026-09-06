@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import SimpleTestCase
 
 from vaultbox.host_env import (
@@ -42,3 +44,15 @@ class HostEnvTests(SimpleTestCase):
     def test_dev_hostname_suffix(self):
         self.assertTrue(is_dev_hostname('app.localhost'))
         self.assertFalse(is_dev_hostname('vault.example.com'))
+
+    def test_single_origin_uses_public_port(self):
+        env = {
+            'VAULTBOX_SINGLE_ORIGIN': 'true',
+            'VAULTBOX_HTTP_PORT': '8000',
+        }
+        with patch.dict('os.environ', env, clear=False):
+            self.assertEqual(frontend_base_url('localhost', False), 'http://localhost:8000')
+            self.assertEqual(backend_base_url('localhost', False), 'http://localhost:8000')
+            self.assertEqual(rp_id_for('localhost'), 'localhost')
+            _, origins = hosts_and_origins('localhost', False)
+            self.assertIn('http://localhost:8000', origins)

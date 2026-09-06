@@ -47,6 +47,7 @@ Demo reset: Admin → Danger zone (type `RESET`), or `python3 manage.py seed_dat
 - Header search → `/inventory?q=`
 - Inventory reset gated in Admin (type `RESET`)
 - Hostname / WebAuthn from `VAULTBOX_HOSTNAME` + Admin override
+- Docker image + `scripts/bootstrap.sh` (single-origin UI+API)
 
 Migration drift from the June handoff is **gone** (`makemigrations --check` clean).
 
@@ -67,7 +68,7 @@ Existing DBs encrypted with the old in-repo defaults must copy those two strings
 
 ## Remaining (not this local beta)
 
-- `DEBUG=False` / CSRF enforcement / Docker — wait until something leaves localhost
+- `DEBUG=False` cookie hardening beyond HTTPS-only cookies; TLS reverse proxy
 - Tests / CI / LICENSE
 - `api_rate_limit` is still an unused setting
 - Optional: CSV on Audits/Dashboard, charts on purchase/sale PDF
