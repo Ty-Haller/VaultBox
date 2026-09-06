@@ -227,6 +227,31 @@ export const adminApi = {
     return request('/site/')
   },
 
+  getStalePasskeys(): Promise<{
+    currentRpId: string
+    currentCount: number
+    staleCount: number
+    staleByRpId: { rpId: string; count: number }[]
+    deleted?: number
+  }> {
+    return request('/stale-passkeys/')
+  },
+
+  purgeStalePasskeys(): Promise<{
+    currentRpId: string
+    currentCount: number
+    staleCount: number
+    staleByRpId: { rpId: string; count: number }[]
+    deleted: number
+  }> {
+    return request('/stale-passkeys/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirm: 'PURGE' }),
+    })
+  },
+
+
   updateSiteConfig(data: { hostname?: string; useHttps?: boolean }): Promise<SiteConfig> {
     return request('/site/', {
       method: 'PATCH',

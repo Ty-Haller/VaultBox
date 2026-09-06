@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Bell,
@@ -23,6 +23,7 @@ import {
 import { useAdmin } from '../../context/AdminContext'
 import { useAuth } from '../../context/AuthContext'
 import { useVault } from '../../context/VaultContext'
+import { adminApi } from '../../lib/adminApi'
 import { api } from '../../lib/api'
 import { Card } from '../../components/ui/Card'
 
@@ -56,8 +57,31 @@ export function AdminDashboard() {
   const [resetting, setResetting] = useState(false)
   const [resetError, setResetError] = useState<string | null>(null)
   const [resetOk, setResetOk] = useState<string | null>(null)
+  const [purgeConfirm, setPurgeConfirm] = useState('')
+  const [purging, setPurging] = useState(false)
+  const [purgeError, setPurgeError] = useState<string | null>(null)
+  const [purgeOk, setPurgeOk] = useState<string | null>(null)
+  const [stale, setStale] = useState<{
+    currentRpId: string
+    currentCount: number
+    staleCount: number
+    staleByRpId: { rpId: string; count: number }[]
+  } | null>(null)
 
   const canReset = user?.permissions?.isFullAdmin
+
+  const loadStale = useCallback(async () => {
+    if (!canReset) return
+    try {
+      setStale(await adminApi.getStalePasskeys())
+    } catch {
+      setStale(null)
+    }
+  }, [canReset])
+
+  useEffect(() => {
+    void loadStale()
+  }, [loadStale])
 
   const handleReset = async () => {
     if (resetting) return
@@ -86,6 +110,32 @@ export function AdminDashboard() {
       setResetError(e instanceof Error ? e.message : 'Reset failed')
     } finally {
       setResetting(false)
+    }
+  }
+
+  const handlePurgeStalePasskeys = async () => {
+    if (purging) return
+    if (purgeConfirm.trim().toUpperCase() !== 'PURGE') {
+      setPurgeOk(null)
+      setPurgeError('Type PURGE to confirm.')
+      return
+    }
+    setPurging(true)
+    setPurgeError(null)
+    setPurgeOk(null)
+    try {
+      const result = await adminApi.purgeStalePasskeys()
+      setStale(result)
+      setPurgeConfirm('')
+      setPurgeOk(
+        result.deleted === 0
+          ? 'No old-host passkeys to remove.'
+          : `Removed ${result.deleted} passkey${result.deleted === 1 ? '' : 's'} from previous hosts.`
+      )
+    } catch (e) {
+      setPurgeError(e instanceof Error ? e.message : 'Purge failed')
+    } finally {
+      setPurging(false)
     }
   }
 
@@ -165,6 +215,53 @@ export function AdminDashboard() {
           </div>
           {resetError && <p className="mt-2 text-sm text-red-600">{resetError}</p>}
           {resetOk && <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">{resetOk}</p>}
+
+          <div className="mt-6 border-t border-red-200 pt-4 dark:border-red-900">
+            <p className="text-sm font-medium text-red-700 dark:text-red-300">Remove old-host passkeys</p>
+            <p className="mt-1 text-sm text-vault-500">
+              After a hostname / RP ID change, passkeys for previous hosts stay in the database so you can revert.
+              Once you have enrolled on this host, purge the leftovers. Type{' '}
+              <code className="font-mono text-vault-700 dark:text-vault-200">PURGE</code> to confirm.
+            </p>
+            {stale && (
+              <p className="mt-2 font-mono text-xs text-vault-600 dark:text-vault-400">
+                This host ({stale.currentRpId}): {stale.currentCount} passkey{stale.currentCount === 1 ? '' : 's'}
+                {stale.staleCount > 0
+                  ? ` · old hosts: ${stale.staleByRpId.map((r) => `${r.rpId} (${r.count})`).join(', ')}`
+                  : ' · no old-host passkeys'}
+              </p>
+            )}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <input
+                type="text"
+                value={purgeConfirm}
+                onChange={(e) => {
+                  setPurgeConfirm(e.target.value)
+                  setPurgeError(null)
+                  setPurgeOk(null)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    void handlePurgeStalePasskeys()
+                  }
+                }}
+                placeholder="PURGE"
+                autoComplete="off"
+                className="w-40 rounded-md border border-vault-200 bg-vault-50 px-3 py-1.5 text-sm dark:border-vault-600 dark:bg-vault-800 dark:text-white"
+              />
+              <button
+                type="button"
+                onClick={() => void handlePurgeStalePasskeys()}
+                disabled={purging || (stale != null && stale.staleCount === 0)}
+                className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {purging ? 'Removing…' : 'Remove old RP ID passkeys'}
+              </button>
+            </div>
+            {purgeError && <p className="mt-2 text-sm text-red-600">{purgeError}</p>}
+            {purgeOk && <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">{purgeOk}</p>}
+          </div>
         </Card>
       )}
     </div>

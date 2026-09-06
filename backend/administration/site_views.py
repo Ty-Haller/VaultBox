@@ -1,7 +1,9 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .auth_mixins import AdminWriteMixin
+from accounts.stale_passkeys import StalePasskeyError, purge_stale_passkeys, stale_passkey_summary
+
+from .auth_mixins import AdminWriteMixin, UserAdminMixin
 from .site_config import get_site_config, save_site_config
 
 
@@ -13,4 +15,20 @@ class SiteConfigView(AdminWriteMixin, APIView):
         try:
             return Response(save_site_config(request.data, request))
         except ValueError as exc:
+            return Response({'error': str(exc)}, status=400)
+
+
+class StalePasskeyView(UserAdminMixin, APIView):
+    """List / delete passkeys bound to a previous WebAuthn RP ID."""
+
+    def get(self, request):
+        return Response(stale_passkey_summary(request))
+
+    def post(self, request):
+        confirm = str(request.data.get('confirm') or '').strip().upper()
+        if confirm != 'PURGE':
+            return Response({'error': 'Type PURGE to confirm.'}, status=400)
+        try:
+            return Response(purge_stale_passkeys(request))
+        except StalePasskeyError as exc:
             return Response({'error': str(exc)}, status=400)
