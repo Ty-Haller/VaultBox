@@ -78,6 +78,7 @@ class PasskeyCredential(TimestampedModel):
     sign_count = models.PositiveIntegerField(default=0)
     transports = models.JSONField(default=list, blank=True)
     aaguid = models.CharField(max_length=64, blank=True)
+    rp_id = models.CharField(max_length=253, default='localhost', db_index=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:

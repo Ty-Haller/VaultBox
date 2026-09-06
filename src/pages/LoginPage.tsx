@@ -15,6 +15,7 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [bootstrapMode, setBootstrapMode] = useState(false)
+  const [bootstrapReason, setBootstrapReason] = useState<'first_boot' | 'rp_id_change' | null>(null)
   const [oauthProviders, setOauthProviders] = useState<OAuthProvider[]>([])
 
   const from = (location.state as { from?: string } | null)?.from ?? '/'
@@ -34,8 +35,14 @@ export function LoginPage() {
   useEffect(() => {
     authApi.getOAuthProviders().then(setOauthProviders).catch(() => {})
     authApi.bootstrapBegin()
-      .then(() => setBootstrapMode(true))
-      .catch(() => setBootstrapMode(false))
+      .then((r) => {
+        setBootstrapMode(true)
+        setBootstrapReason(r.reason === 'rp_id_change' ? 'rp_id_change' : 'first_boot')
+      })
+      .catch(() => {
+        setBootstrapMode(false)
+        setBootstrapReason(null)
+      })
   }, [])
 
   const handlePasskeyLogin = async () => {
@@ -89,7 +96,9 @@ export function LoginPage() {
         {bootstrapMode ? (
           <div className="space-y-4">
             <p className="rounded-md bg-gold-500/10 px-3 py-2 text-sm text-gold-600 dark:text-gold-300">
-              First-time setup: register an admin passkey to secure VaultBox.
+              {bootstrapReason === 'rp_id_change'
+                ? 'No passkey is registered for this host yet (hostname / RP ID changed). Register an admin passkey here to recover access. Old passkeys stay bound to the previous host.'
+                : 'First-time setup: register an admin passkey to secure VaultBox.'}
             </p>
             <button
               type="button"

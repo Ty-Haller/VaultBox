@@ -52,8 +52,19 @@ def _pop_challenge(request, key: str) -> Any:
     return request.session.pop(f'webauthn_{key}', None)
 
 
+def current_rp_id(request=None) -> str:
+    return _rp_id(request)
+
+
+def passkeys_for_rp(request=None, user: User | None = None):
+    qs = PasskeyCredential.objects.filter(rp_id=_rp_id(request))
+    if user is not None:
+        qs = qs.filter(user=user)
+    return qs
+
+
 def registration_options(request, user: User) -> dict:
-    existing = PasskeyCredential.objects.filter(user=user)
+    existing = passkeys_for_rp(request, user)
     exclude = [
         PublicKeyCredentialDescriptor(id=base64url_to_bytes(pk.credential_id))
         for pk in existing
@@ -94,6 +105,7 @@ def verify_registration(request, user: User, credential: dict, name: str = 'Pass
         public_key=bytes_to_base64url(verification.credential_public_key),
         sign_count=verification.sign_count,
         aaguid=str(verification.aaguid) if verification.aaguid else '',
+        rp_id=_rp_id(request),
     )
 
 
@@ -103,7 +115,7 @@ def authentication_options(request, username: str | None = None) -> dict:
     if username:
         user = User.objects.filter(username=username, is_active=True).first()
         if user:
-            for pk in PasskeyCredential.objects.filter(user=user):
+            for pk in passkeys_for_rp(request, user):
                 allow_credentials.append(
                     PublicKeyCredentialDescriptor(id=base64url_to_bytes(pk.credential_id))
                 )
@@ -128,6 +140,8 @@ def verify_authentication(request, credential: dict) -> User:
     stored = PasskeyCredential.objects.select_related('user').filter(credential_id=cred_id_b64).first()
     if not stored:
         raise ValueError('Unknown passkey')
+    if stored.rp_id != _rp_id(request):
+        raise ValueError('Passkey was registered for a different host')
     verification = verify_authentication_response(
         credential=credential,
         expected_challenge=base64url_to_bytes(challenge_b64),

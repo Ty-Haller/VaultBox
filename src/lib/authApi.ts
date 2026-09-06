@@ -34,6 +34,7 @@ export interface AuthUser {
 export interface PasskeyInfo {
   id: string
   name: string
+  rpId?: string
   createdAt: string
   lastUsedAt: string | null
 }
@@ -112,7 +113,12 @@ export const authApi = {
     })
   },
 
-  bootstrapBegin(): Promise<{ options: Record<string, unknown>; username: string }> {
+  bootstrapBegin(): Promise<{
+    options: Record<string, unknown>
+    username: string
+    reason?: 'first_boot' | 'rp_id_change'
+    rpId?: string
+  }> {
     return request('/passkey/bootstrap/begin/', { method: 'POST' })
   },
 

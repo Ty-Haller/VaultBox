@@ -40,7 +40,7 @@ class AuthMeView(APIView):
         user = request.user
         profile, _ = UserProfile.objects.get_or_create(user=user)
         access = get_user_access(user)
-        passkey_count = PasskeyCredential.objects.filter(user=user).count()
+        passkey_count = webauthn_service.passkeys_for_rp(request, user).count()
         return Response({
             'id': user.pk,
             'username': user.username,
@@ -69,8 +69,8 @@ class PasskeyLoginBeginView(APIView):
         if not username:
             return Response({'error': 'Username required'}, status=400)
         user = User.objects.filter(username=username, is_active=True).first()
-        if not user or not PasskeyCredential.objects.filter(user=user).exists():
-            return Response({'error': 'No passkey registered for this user'}, status=404)
+        if not user or not webauthn_service.passkeys_for_rp(request, user).exists():
+            return Response({'error': 'No passkey registered for this user on this host'}, status=404)
         options = webauthn_service.authentication_options(request, username)
         return Response(options)
 
@@ -124,25 +124,40 @@ def _bootstrap_user() -> User | None:
     return User.objects.filter(is_active=True).order_by('date_joined').first()
 
 
+def _bootstrap_reason(request) -> str | None:
+    """Bootstrap is allowed when this host/RP ID has no passkeys yet."""
+    if webauthn_service.passkeys_for_rp(request).exists():
+        return None
+    if PasskeyCredential.objects.exists():
+        return 'rp_id_change'
+    return 'first_boot'
+
+
 class BootstrapPasskeyBeginView(APIView):
-    """First-time setup when no passkeys exist in the system."""
+    """First-time setup, or re-enroll admin after the WebAuthn RP ID/hostname changes."""
     permission_classes = [AllowAny]
 
     def post(self, request):
-        if PasskeyCredential.objects.exists():
+        reason = _bootstrap_reason(request)
+        if not reason:
             return Response({'error': 'Bootstrap not available'}, status=403)
         user = _bootstrap_user()
         if not user:
             return Response({'error': 'No users configured'}, status=404)
         options = webauthn_service.registration_options(request, user)
-        return Response({'options': options, 'username': user.username})
+        return Response({
+            'options': options,
+            'username': user.username,
+            'reason': reason,
+            'rpId': webauthn_service.current_rp_id(request),
+        })
 
 
 class BootstrapPasskeyFinishView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        if PasskeyCredential.objects.exists():
+        if not _bootstrap_reason(request):
             return Response({'error': 'Bootstrap not available'}, status=403)
         user = _bootstrap_user()
         if not user:
