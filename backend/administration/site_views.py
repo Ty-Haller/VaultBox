@@ -11,6 +11,6 @@ class SiteConfigView(AdminWriteMixin, APIView):
 
     def patch(self, request):
         try:
-            return Response(save_site_config(request.data))
+            return Response(save_site_config(request.data, request))
         except ValueError as exc:
             return Response({'error': str(exc)}, status=400)

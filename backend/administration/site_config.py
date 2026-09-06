@@ -1,13 +1,24 @@
-"""Public hostname and derived site URLs (AppSetting JSON)."""
+"""Public hostname and derived site URLs (env boot defaults + optional Admin override)."""
 
 from __future__ import annotations
 
 import json
-import re
 import socket
-from urllib.parse import urlparse
 
 from django.conf import settings as django_settings
+from django.db.utils import OperationalError, ProgrammingError
+
+from vaultbox.host_env import (
+    backend_base_url,
+    env_hostname,
+    env_use_https,
+    frontend_base_url,
+    hosts_and_origins,
+    is_dev_hostname,
+    normalize_hostname,
+    rp_id_for,
+    validate_hostname,
+)
 
 from .models import AppSetting
 
@@ -18,14 +29,24 @@ DEFAULT_CONFIG = {
     'useHttps': False,
 }
 
-_DEV_HOSTNAMES = frozenset({'localhost', '127.0.0.1', '::1'})
-_HOSTNAME_RE = re.compile(
-    r'^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$'
-)
+def system_hostname() -> str:
+    try:
+        fqdn = socket.getfqdn()
+        if fqdn and fqdn not in ('localhost', '127.0.0.1'):
+            return fqdn.split(':')[0]
+    except OSError:
+        pass
+    try:
+        return socket.gethostname().split(':')[0]
+    except OSError:
+        return 'localhost'
 
 
 def _load_json() -> dict:
-    row = AppSetting.objects.filter(key=SETTING_KEY).first()
+    try:
+        row = AppSetting.objects.filter(key=SETTING_KEY).first()
+    except (OperationalError, ProgrammingError):
+        return dict(DEFAULT_CONFIG)
     if not row or not row.value:
         return dict(DEFAULT_CONFIG)
     try:
@@ -52,135 +73,100 @@ def _save_json(data: dict) -> dict:
     return data
 
 
-def system_hostname() -> str:
-    try:
-        fqdn = socket.getfqdn()
-        if fqdn and fqdn not in ('localhost', '127.0.0.1'):
-            return fqdn.split(':')[0]
-    except OSError:
-        pass
-    try:
-        return socket.gethostname().split(':')[0]
-    except OSError:
-        return 'localhost'
+def _admin_hostname(cfg: dict) -> str:
+    return normalize_hostname(cfg.get('hostname', ''))
 
 
-def normalize_hostname(value: str) -> str:
-    raw = (value or '').strip()
-    if not raw:
-        return ''
-    if '://' in raw:
-        parsed = urlparse(raw)
-        raw = parsed.hostname or raw
-    return raw.split(':')[0].strip().lower().rstrip('.')
+def _boot_hostname() -> str:
+    return getattr(django_settings, 'VAULTBOX_HOSTNAME', None) or env_hostname()
 
 
-def validate_hostname(hostname: str) -> None:
-    if not hostname:
-        return
-    if hostname in _DEV_HOSTNAMES:
-        return
-    if len(hostname) > 253:
-        raise ValueError('Hostname is too long.')
-    if not _HOSTNAME_RE.match(hostname):
-        raise ValueError('Invalid hostname. Use a DNS name or SAN (e.g. vaultbox.home.arpa).')
+def _boot_use_https() -> bool:
+    return bool(getattr(django_settings, 'VAULTBOX_USE_HTTPS', env_use_https()))
 
 
-def is_dev_hostname(hostname: str) -> bool:
-    if hostname in _DEV_HOSTNAMES:
-        return True
-    return hostname.endswith('.localhost')
-
-
-def resolve_hostname(cfg: dict | None = None, request=None) -> str:
+def resolve_hostname(cfg: dict | None = None, request=None) -> tuple[str, str]:
     data = cfg if cfg is not None else _load_json()
-    configured = normalize_hostname(data.get('hostname', ''))
-    if configured:
-        return configured
+    admin_host = _admin_hostname(data)
+    if admin_host:
+        return admin_host, 'admin'
+    env_host = _boot_hostname()
+    if env_host:
+        return env_host, 'env'
     if request is not None:
         host = (request.META.get('HTTP_HOST') or '').split(':')[0].lower()
         if host:
-            return host
-    return system_hostname()
+            if host in ('127.0.0.1', '::1'):
+                host = 'localhost'
+            return host, 'request'
+    return system_hostname(), 'system'
 
 
-def _with_port(scheme: str, hostname: str, port: int | None) -> str:
-    if port is None:
-        return f'{scheme}://{hostname}'
-    if (scheme == 'https' and port == 443) or (scheme == 'http' and port == 80):
-        return f'{scheme}://{hostname}'
-    return f'{scheme}://{hostname}:{port}'
+def resolve_use_https(cfg: dict | None = None) -> tuple[bool, str]:
+    data = cfg if cfg is not None else _load_json()
+    if _admin_hostname(data):
+        return bool(data.get('useHttps')), 'admin'
+    if os_environ_set('VAULTBOX_USE_HTTPS') or _boot_hostname():
+        return _boot_use_https(), 'env'
+    return False, 'default'
+
+
+def os_environ_set(name: str) -> bool:
+    import os
+    return bool(os.environ.get(name, '').strip())
 
 
 def get_frontend_base_url(request=None) -> str:
-    _ensure_runtime_host_settings()
+    apply_host_settings()
     cfg = _load_json()
-    hostname = resolve_hostname(cfg, request)
-    use_https = bool(cfg.get('useHttps'))
-    scheme = 'https' if use_https else 'http'
-
-    if is_dev_hostname(hostname):
-        host = 'localhost' if hostname == '127.0.0.1' else hostname
-        return _with_port(scheme, host, 5173)
-
-    return _with_port(scheme, hostname, 443 if use_https else 80)
+    hostname, _ = resolve_hostname(cfg, request)
+    use_https, _ = resolve_use_https(cfg)
+    return frontend_base_url(hostname, use_https)
 
 
 def get_backend_base_url(request=None) -> str:
-    _ensure_runtime_host_settings()
+    apply_host_settings()
     cfg = _load_json()
-    hostname = resolve_hostname(cfg, request)
-    use_https = bool(cfg.get('useHttps'))
-    scheme = 'https' if use_https else 'http'
-
-    if is_dev_hostname(hostname):
-        return 'http://127.0.0.1:8000'
-
-    return _with_port(scheme, hostname, 443 if use_https else 80)
+    hostname, _ = resolve_hostname(cfg, request)
+    use_https, _ = resolve_use_https(cfg)
+    return backend_base_url(hostname, use_https)
 
 
 def get_webauthn_rp_id(request=None) -> str:
-    hostname = resolve_hostname(request=request)
-    if hostname == '127.0.0.1':
-        return 'localhost'
-    return hostname
+    hostname, _ = resolve_hostname(request=request)
+    return rp_id_for(hostname)
 
 
 def get_webauthn_origin(request=None) -> str:
     return get_frontend_base_url(request)
 
 
-_runtime_hosts_applied = False
-
-
-def _ensure_runtime_host_settings() -> None:
-    global _runtime_hosts_applied
-    if _runtime_hosts_applied:
-        return
-    _apply_runtime_host_settings()
-    _runtime_hosts_applied = True
-
-
 def get_site_config(request=None) -> dict:
-    _ensure_runtime_host_settings()
+    apply_host_settings()
     cfg = _load_json()
-    hostname = resolve_hostname(cfg, request)
+    hostname, hostname_source = resolve_hostname(cfg, request)
+    use_https, use_https_source = resolve_use_https(cfg)
     request_host = (request.META.get('HTTP_HOST') or '').split(':')[0] if request else None
+    env_host = _boot_hostname()
     return {
-        'hostname': normalize_hostname(cfg.get('hostname', '')),
+        'hostname': _admin_hostname(cfg),
         'effectiveHostname': hostname,
         'detectedHostname': system_hostname(),
         'requestHostname': request_host or None,
-        'useHttps': bool(cfg.get('useHttps')),
-        'frontendBaseUrl': get_frontend_base_url(request),
-        'backendBaseUrl': get_backend_base_url(request),
-        'webauthnRpId': get_webauthn_rp_id(request),
-        'webauthnOrigin': get_webauthn_origin(request),
+        'envHostname': env_host,
+        'envUseHttps': _boot_use_https(),
+        'hostnameSource': hostname_source,
+        'useHttpsSource': use_https_source,
+        'useHttps': use_https,
+        'frontendBaseUrl': frontend_base_url(hostname, use_https),
+        'backendBaseUrl': backend_base_url(hostname, use_https),
+        'webauthnRpId': rp_id_for(hostname),
+        'webauthnOrigin': frontend_base_url(hostname, use_https),
         'isDevHostname': is_dev_hostname(hostname),
     }
 
 
-def save_site_config(data: dict) -> dict:
+def save_site_config(data: dict, request=None) -> dict:
     current = _load_json()
     if 'hostname' in data:
         hostname = normalize_hostname(data['hostname'])
@@ -189,44 +175,43 @@ def save_site_config(data: dict) -> dict:
     if 'useHttps' in data:
         current['useHttps'] = bool(data['useHttps'])
     _save_json(current)
-    global _runtime_hosts_applied
-    _runtime_hosts_applied = False
-    _ensure_runtime_host_settings()
-    return get_site_config()
+    apply_host_settings(force=True)
+    return get_site_config(request)
 
 
-def get_cors_and_allowed_hosts() -> tuple[list[str], list[str]]:
+def get_cors_and_allowed_hosts(request=None) -> tuple[list[str], list[str]]:
     cfg = _load_json()
-    hostname = resolve_hostname(cfg)
-    hosts = {hostname}
-    if is_dev_hostname(hostname):
-        hosts.update(['localhost', '127.0.0.1'])
-    else:
-        hosts.add('localhost')
-        hosts.add('127.0.0.1')
-
-    origins = {get_frontend_base_url()}
-    if is_dev_hostname(hostname):
-        origins.add('http://localhost:5173')
-        origins.add('http://127.0.0.1:5173')
-
-    return sorted(hosts), sorted(origins)
+    hostname, _ = resolve_hostname(cfg, request)
+    use_https, _ = resolve_use_https(cfg)
+    return hosts_and_origins(hostname, use_https)
 
 
-def _apply_runtime_host_settings() -> None:
+def apply_host_settings(force: bool = False) -> None:
+    global _runtime_hosts_applied
+    if _runtime_hosts_applied and not force:
+        return
     try:
         extra_hosts, extra_origins = get_cors_and_allowed_hosts()
-        django_settings.ALLOWED_HOSTS = list(dict.fromkeys([
-            *getattr(django_settings, 'ALLOWED_HOSTS', []),
-            *extra_hosts,
-        ]))
-        django_settings.CORS_ALLOWED_ORIGINS = list(dict.fromkeys([
-            *getattr(django_settings, 'CORS_ALLOWED_ORIGINS', []),
-            *extra_origins,
-        ]))
-        django_settings.CSRF_TRUSTED_ORIGINS = list(dict.fromkeys([
-            *getattr(django_settings, 'CSRF_TRUSTED_ORIGINS', []),
-            *extra_origins,
-        ]))
-    except Exception:
-        pass
+    except (OperationalError, ProgrammingError):
+        extra_hosts, extra_origins = hosts_and_origins(_boot_hostname(), _boot_use_https())
+    django_settings.ALLOWED_HOSTS = list(dict.fromkeys([
+        *getattr(django_settings, 'ALLOWED_HOSTS', []),
+        *extra_hosts,
+    ]))
+    django_settings.CORS_ALLOWED_ORIGINS = list(dict.fromkeys([
+        *getattr(django_settings, 'CORS_ALLOWED_ORIGINS', []),
+        *extra_origins,
+    ]))
+    django_settings.CSRF_TRUSTED_ORIGINS = list(dict.fromkeys([
+        *getattr(django_settings, 'CSRF_TRUSTED_ORIGINS', []),
+        *extra_origins,
+    ]))
+    _runtime_hosts_applied = True
+
+
+_runtime_hosts_applied = False
+
+
+# Back-compat for the old one-shot name
+def _ensure_runtime_host_settings() -> None:
+    apply_host_settings()

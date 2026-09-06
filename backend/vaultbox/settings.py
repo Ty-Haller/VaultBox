@@ -2,6 +2,16 @@ import os
 import secrets
 from pathlib import Path
 
+from vaultbox.host_env import (
+    backend_base_url as _backend_base_url,
+    env_hostname,
+    env_use_https,
+    frontend_base_url as _frontend_base_url,
+    hosts_and_origins,
+    load_admin_override,
+    rp_id_for,
+)
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 REPO_ROOT = BASE_DIR.parent
 ENV_FILE = REPO_ROOT / '.env'
@@ -64,7 +74,12 @@ VAULTBOX_ENCRYPTION_KEY = _load_secret('VAULTBOX_ENCRYPTION_KEY')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+VAULTBOX_HOSTNAME = env_hostname()
+VAULTBOX_USE_HTTPS = env_use_https()
+_admin_host, _admin_https = load_admin_override(BASE_DIR / 'db.sqlite3')
+_boot_host = _admin_host or VAULTBOX_HOSTNAME
+_boot_https = _admin_https if _admin_host else VAULTBOX_USE_HTTPS
+ALLOWED_HOSTS, CORS_ALLOWED_ORIGINS = hosts_and_origins(_boot_host, _boot_https)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -139,11 +154,6 @@ BACKUP_ROOT = BASE_DIR / 'backups'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-]
-
 CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
@@ -160,18 +170,15 @@ REST_FRAMEWORK = {
     'DATE_FORMAT': '%Y-%m-%d',
 }
 
-FRONTEND_BASE_URL = 'http://localhost:5173'
-BACKEND_BASE_URL = 'http://127.0.0.1:8000'
+FRONTEND_BASE_URL = _frontend_base_url(_boot_host or 'localhost', _boot_https)
+BACKEND_BASE_URL = _backend_base_url(_boot_host or 'localhost', _boot_https)
 
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-]
+CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS)
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_HTTPONLY = True
 
-# WebAuthn / Passkey configuration
-WEBAUTHN_RP_ID = 'localhost'
+# WebAuthn / Passkey configuration (derived from hostname; Admin may override at runtime)
+WEBAUTHN_RP_ID = rp_id_for(_boot_host or 'localhost')
 WEBAUTHN_RP_NAME = 'VaultBox'
 WEBAUTHN_ORIGIN = FRONTEND_BASE_URL
 
