@@ -1,6 +1,6 @@
 # VaultBox — Session Handoff
 
-**Last updated:** 2026-09-05  
+**Last updated:** 2026-09-06  
 **Status:** Local-first hard asset inventory. Not a public internet host. A vault IoT appliance is a later phase.
 
 Use this file to resume work. `README.md` is the operator guide.
@@ -9,7 +9,7 @@ Use this file to resume work. `README.md` is the operator guide.
 
 ## Product
 
-VaultBox: Site → Vault → Holding. React 19 + Vite UI, Django 5 REST API, SQLite.
+VaultBox: Site → Vault → Holding. React 19 + Vite UI, Django 6 REST API, SQLite.
 
 - **Short term:** operators run it on localhost. UI **http://localhost:5173** (passkeys fail on `127.0.0.1`).
 - **Long term:** a small appliance that lives inside the vault (offline-first image of this same tree). Not started.
@@ -79,4 +79,4 @@ Existing DBs encrypted with the old in-repo defaults must copy those two strings
 
 **Frontend:** React 19, TypeScript, Vite 8, Tailwind CSS v4, Recharts, TanStack Query, React Router 7
 
-**Backend:** Django 5, DRF, SQLite, Pillow, ReportLab, qrcode, webauthn, cryptography
+**Backend:** Django 6.1, DRF, SQLite, Pillow, ReportLab, qrcode, webauthn, cryptography

@@ -57,6 +57,34 @@ Reset demo inventory later from **Admin → Danger zone** (type `RESET`), or `py
 - **Secrets** — Encrypted seed phrases and recovery data
 - **Admin** — NetBox-style taxonomy, users, roles, notifications
 
+## Screenshots
+
+Captured from the local demo at [http://localhost:5173](http://localhost:5173). Passkeys fail on `127.0.0.1`.
+
+**Login** — VaultBox, Hard Asset Inventory, passkey sign-in.
+
+![Login](docs/screenshots/login.png)
+
+**Dashboard** — portfolio totals, charts, and the live price ticker.
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+**Inventory** — holdings table with filters and CSV export.
+
+![Inventory](docs/screenshots/inventory.png)
+
+**Vault** — one vault: audit status, utilization, holdings.
+
+![Vault detail](docs/screenshots/vault.png)
+
+**Reports** — PDFs plus purchases & sales (all-time).
+
+![Reports](docs/screenshots/reports.png)
+
+**Admin** — taxonomy, users, backups, SSO.
+
+![Admin](docs/screenshots/admin.png)
+
 ## Authentication
 
 Passkey login is always on. SSO is optional under **Admin → SSO / OAuth**. Callback URL:
@@ -94,7 +122,7 @@ Authenticated JSON at `/api/`. UUID primary keys.
 
 **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, Recharts, React Router
 
-**Backend:** Django 5, Django REST Framework, SQLite, Pillow, ReportLab, qrcode, webauthn, cryptography
+**Backend:** Django 6.1, Django REST Framework, SQLite, Pillow, ReportLab, qrcode, webauthn, cryptography
 
 ## Security
 
