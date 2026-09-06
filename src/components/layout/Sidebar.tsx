@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
   BarChart3,
-  Building2,
   ClipboardCheck,
   Coins,
   History,
@@ -16,6 +15,7 @@ import {
 import { cn } from '../../lib/utils'
 import { useAuth } from '../../context/AuthContext'
 import { useVault } from '../../context/VaultContext'
+import { LogoMark } from '../brand/LogoMark'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -47,9 +47,7 @@ export function Sidebar() {
     <aside className="flex w-60 shrink-0 flex-col bg-vault-900 text-vault-200">
       <div className="border-b border-vault-700 px-5 py-5">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold-500/20">
-            <Building2 className="h-5 w-5 text-gold-400" />
-          </div>
+          <LogoMark className="h-9 w-9 rounded-lg" alt="" />
           <div>
             <h1 className="text-base font-bold text-white">VaultBox</h1>
             <p className="text-[10px] uppercase tracking-widest text-vault-400">
