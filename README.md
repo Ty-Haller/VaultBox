@@ -52,10 +52,12 @@ Reset demo inventory later from **Admin → Danger zone** (type `RESET`), or `py
 - **Audits** — Standard and advanced vault counts; cancelable sessions
 - **Reports** — Portfolio, inventory, QR labels, purchase/sale, P/L (PDF + CSV)
 - **Live prices** — Metals (and ticker crypto/stocks) with fallback warnings
+- **Notifications** — Event engine with in-app, email (SMTP), and [Apprise](https://github.com/caronc/apprise) (Discord, Slack, Telegram, and other URL targets)
+- **Alerts** — Spot/market % change and price above/below; vault audit due/overdue and capacity; holding gain/loss; insurance expiry; plus audit, admin, and inventory events
 - **QR labels** — Per holding; lookup at `/lookup/:code`
 - **Backups** — On-demand and scheduled SQLite + media archives (optional encryption + rclone)
 - **Secrets** — Encrypted seed phrases and recovery data
-- **Admin** — NetBox-style taxonomy, users, roles, notifications
+- **Admin** — NetBox-style taxonomy, users, roles
 
 ## Screenshots
 
@@ -84,6 +86,30 @@ Captured from the local demo at [http://localhost:5173](http://localhost:5173). 
 **Admin** — taxonomy, users, backups, SSO.
 
 ![Admin](docs/screenshots/admin.png)
+
+**Notification defaults** — system event catalog and default channels (in-app, email, Apprise).
+
+![Notification defaults](docs/screenshots/notifications-catalog.png)
+
+**Role defaults** — per-role subscriptions for the notification engine.
+
+![Role notification defaults](docs/screenshots/notifications-roles.png)
+
+**Notification preferences** — which alerts you get and how they are delivered.
+
+![Notification preferences](docs/screenshots/notifications-prefs.png)
+
+**Apprise** — pick Discord, Slack, Telegram, and other URL targets (no secrets in this shot).
+
+![Apprise setup](docs/screenshots/apprise-setup.png)
+
+**Market alerts** — % change and price above/below on an instrument; delivery is in user preferences.
+
+![Market alerts](docs/screenshots/market-alerts.png)
+
+**SMTP delivery** — admin relay for email notifications.
+
+![SMTP delivery](docs/screenshots/notifications-smtp.png)
 
 ## Authentication
 
@@ -122,7 +148,7 @@ Authenticated JSON at `/api/`. UUID primary keys.
 
 **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, Recharts, React Router
 
-**Backend:** Django 6.1, Django REST Framework, SQLite, Pillow, ReportLab, qrcode, webauthn, cryptography
+**Backend:** Django 6.1, Django REST Framework, SQLite, Pillow, ReportLab, qrcode, webauthn, cryptography, Apprise
 
 ## Security
 
