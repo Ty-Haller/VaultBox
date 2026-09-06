@@ -121,7 +121,7 @@ Passkey login is always on. SSO is optional under **Admin → SSO / OAuth**. Cal
 
 `{backend-base}/api/auth/oauth/{provider-id}/callback/`
 
-Set the public hostname under **Admin → Site & Hostname**. Leave it blank for the server hostname; `localhost` keeps ports 5173 / 8000.
+Set the public hostname in `.env` (`VAULTBOX_HOSTNAME`, optional `VAULTBOX_USE_HTTPS=true`) or under **Admin → Site & Hostname**. Open the **App URL** shown on that page — passkeys fail if the browser host does not match the RP ID. `localhost` keeps ports 5173 / 8000; `127.0.0.1` is not valid for passkeys. Changing the hostname/RP ID requires re-registering passkeys.
 
 ## Backups
 

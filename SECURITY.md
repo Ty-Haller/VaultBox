@@ -10,7 +10,7 @@ VaultBox is a **local-first** inventory app. Treat the machine that runs it as t
 
 ## Auth
 
-- Sign-in is passkeys (WebAuthn). RP ID is `localhost` in this tree — use `http://localhost:5173`, not `127.0.0.1`.
+- Sign-in is passkeys (WebAuthn). RP ID is `localhost` unless `VAULTBOX_HOSTNAME` or **Admin → Site & Hostname** sets another name. Open the App URL that matches that RP ID (`http://localhost:5173` for local beta, not `127.0.0.1`). Changing RP ID requires re-registering passkeys.
 - There is no password login.
 - Demo inventory reset is Full Admin only (**Admin → Danger zone**, type `RESET`).
 

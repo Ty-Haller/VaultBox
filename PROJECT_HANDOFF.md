@@ -46,6 +46,7 @@ Demo reset: Admin → Danger zone (type `RESET`), or `python3 manage.py seed_dat
 - Secrets loaded from `.env` (generated on first boot; no hardcoded Django keys)
 - Header search → `/inventory?q=`
 - Inventory reset gated in Admin (type `RESET`)
+- Hostname / WebAuthn from `VAULTBOX_HOSTNAME` + Admin override
 
 Migration drift from the June handoff is **gone** (`makemigrations --check` clean).
 
@@ -66,7 +67,6 @@ Existing DBs encrypted with the old in-repo defaults must copy those two strings
 
 ## Remaining (not this local beta)
 
-- Non-localhost WebAuthn RP ID / hostname from env
 - `DEBUG=False` / CSRF enforcement / Docker — wait until something leaves localhost
 - Tests / CI / LICENSE
 - `api_rate_limit` is still an unused setting
