@@ -8,8 +8,11 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-e8b923?labelColor=111b24)](LICENSE)
 [![Status](https://img.shields.io/badge/status-0.1.0--beta-8aa4bc?labelColor=111b24)](README.md)
+[![Live demo](https://img.shields.io/badge/LIVE%20DEMO-demo.vaultboxoss.com-e8b923?labelColor=111b24)](https://demo.vaultboxoss.com)
 
 Passkeys (WebAuthn) are the sign-in method. Use **http://localhost:5173** in development, or the container App URL — `127.0.0.1` will fail passkey registration.
+
+Throwaway public demo (fake data, 30-minute wipe): **[LIVE DEMO](https://demo.vaultboxoss.com)**. Do not enter real secrets.
 
 Project site (static): [site/index.html](site/index.html). After GitHub Pages is on: https://ty-haller.github.io/VaultBox/
 
@@ -63,11 +66,15 @@ docker compose up --build -d
 # or: podman compose up --build -d
 ```
 
-## Public demo mode
+## Public demo
 
-Optional, **off by default**. Use it only for a shared throwaway instance with fake data — never against a real holdings database.
+**[LIVE DEMO](https://demo.vaultboxoss.com)** — a throwaway copy with fake seed data. It wipes every 30 minutes and drops visitor passkeys. Do not enter real secrets, seed phrases, or backup passwords.
 
-Set `VAULTBOX_PUBLIC_DEMO=1` and point `VAULTBOX_DATA_DIR` / `VAULTBOX_ENV_FILE` at an isolated directory (see [`.env.example`](.env.example)). Timed wipe interval is `VAULTBOX_DEMO_RESET_SECONDS` (default 1800).
+On the login page: **Start demo admin session** (Full Admin, no passkey) or **Register a passkey** (Viewer). Hostname, SSO/OAuth, and backups stay visible in Admin but cannot be changed. Email and Apprise are not sent.
+
+VaultBox remains local-first software you run yourself. The public demo is a disposable instance for clicking around; it is not a hosted product.
+
+Optional self-hosted demo mode is **off by default**. Set `VAULTBOX_PUBLIC_DEMO=1` and point `VAULTBOX_DATA_DIR` / `VAULTBOX_ENV_FILE` at an isolated directory (see [`.env.example`](.env.example)). Timed wipe interval is `VAULTBOX_DEMO_RESET_SECONDS` (default 1800). Never point that flag at a real holdings database.
 
 Local helper (Vite + Django, isolated `backend/demo-data/`):
 
@@ -76,15 +83,6 @@ Local helper (Vite + Django, isolated `backend/demo-data/`):
 # App: http://localhost:5173  (not 127.0.0.1)
 ./scripts/public-demo-local.sh stop
 ```
-
-When the flag is on:
-
-- Banner and countdown on every page; wipe restores the demo seed and drops visitor passkeys
-- Login offers **Start demo admin session** (Full Admin, no passkey) and **Register a passkey** (Viewer)
-- Hostname, SSO/OAuth, and backups stay visible in Admin but cannot be changed
-- Email and Apprise are not sent
-
-VaultBox remains local-first software you run yourself. Demo mode is how a maintainer can put a disposable copy on the internet; it is not a hosted product. The Fly.io instance at `demo.vaultboxoss.com` is documented here once it is live.
 
 ## HTTPS (Caddy)
 

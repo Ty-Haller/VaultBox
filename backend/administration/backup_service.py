@@ -228,8 +228,8 @@ def _restore_from_file_path(path: Path, *, password: str | None = None, encrypte
                 raise ValueError('Password is required to restore an encrypted backup.')
             try:
                 decrypt_file(str(path), str(archive), password)
-            except BackupCryptoError as exc:
-                raise ValueError(str(exc)) from exc
+            except BackupCryptoError:
+                raise ValueError('Could not decrypt backup.') from None
         else:
             shutil.copy2(path, archive)
 
