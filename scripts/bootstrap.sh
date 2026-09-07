@@ -45,8 +45,18 @@ prompt() {
   fi
 }
 
-need_cmd docker
-docker info >/dev/null 2>&1 || die "Docker is installed but not usable (daemon running? your user in the docker group?)."
+DOCKER="${DOCKER:-}"
+if [ -z "$DOCKER" ]; then
+  if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+    DOCKER=docker
+  elif command -v podman >/dev/null 2>&1 && podman info >/dev/null 2>&1; then
+    DOCKER=podman
+    say "==> Using Podman (Docker Engine not available)."
+  else
+    die "Need Docker Engine or Podman. Fedora: sudo dnf install -y podman. Docker: https://docs.docker.com/engine/install/"
+  fi
+fi
+"$DOCKER" info >/dev/null 2>&1 || die "$DOCKER is installed but not usable (daemon running? rootless setup? docker group?)."
 
 ROOT="$(find_repo_root || true)"
 if [ -z "$ROOT" ]; then
@@ -81,13 +91,13 @@ else
   say "==> Using existing $ROOT/.env"
 fi
 
-if docker ps -a --format '{{.Names}}' | grep -qx "$CONTAINER"; then
+if "$DOCKER" ps -a --format '{{.Names}}' | grep -qx "$CONTAINER"; then
   say "==> Removing existing container $CONTAINER"
-  docker rm -f "$CONTAINER" >/dev/null
+  "$DOCKER" rm -f "$CONTAINER" >/dev/null
 fi
 
 say "==> Building image $IMAGE (first run takes a few minutes)"
-docker build -t "$IMAGE" "$ROOT"
+"$DOCKER" build -t "$IMAGE" "$ROOT"
 
 SCHEME="http"
 case "$USE_HTTPS" in
@@ -101,7 +111,7 @@ elif [ "$SCHEME" = https ] && [ "$PORT" != 443 ]; then
 fi
 
 say "==> Starting $CONTAINER"
-docker run -d \
+"$DOCKER" run -d \
   --name "$CONTAINER" \
   --restart unless-stopped \
   --env-file "$ROOT/.env" \
@@ -123,14 +133,15 @@ for _ in $(seq 1 60); do
   fi
   sleep 1
 done
-[ "$ok" = 1 ] || die "Container started but /api/auth/csrf/ did not respond. Check: docker logs $CONTAINER"
+[ "$ok" = 1 ] || die "Container started but /api/auth/csrf/ did not respond. Check: $DOCKER logs $CONTAINER"
 
 say ""
-say "VaultBox is running."
+say "VaultBox is running ($DOCKER)."
 say "  App URL:  $ORIGIN"
 say "  Login:    $ORIGIN/login"
-say "  Data:     Docker volume vaultbox-data"
+say "  Data:     volume vaultbox-data"
 say ""
 say "Open the App URL (not 127.0.0.1) and register an admin passkey."
-say "Logs:  docker logs -f $CONTAINER"
-say "Stop:  docker stop $CONTAINER"
+say "HTTPS:  $DOCKER compose -f docker-compose.https.yml up --build -d"
+say "Logs:   $DOCKER logs -f $CONTAINER"
+say "Stop:   $DOCKER stop $CONTAINER"

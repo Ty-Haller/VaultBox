@@ -203,6 +203,8 @@ SESSION_COOKIE_HTTPONLY = True
 if VAULTBOX_USE_HTTPS:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
 
 # WebAuthn / Passkey configuration (derived from hostname; Admin may override at runtime)
 WEBAUTHN_RP_ID = rp_id_for(_boot_host or 'localhost')

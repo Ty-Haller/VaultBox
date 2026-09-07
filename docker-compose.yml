@@ -1,3 +1,4 @@
+# HTTP on 127.0.0.1 (default). For HTTPS see docker-compose.https.yml.
 services:
   vaultbox:
     build: .

@@ -1,0 +1,54 @@
+# HTTPS in front of VaultBox (Caddy).
+# LAN / localhost (default):
+#   VAULTBOX_HOSTNAME=localhost CADDYFILE=./deploy/Caddyfile.internal \
+#     docker compose -f docker-compose.https.yml up --build -d
+# Public Let's Encrypt:
+#   VAULTBOX_HOSTNAME=vault.example.com CADDY_EMAIL=you@example.com CADDYFILE=./deploy/Caddyfile \
+#     docker compose -f docker-compose.https.yml up --build -d
+# Rootless Podman cannot bind 80/443 without extra sysctl; use e.g.
+#   CADDY_HTTP_PORT=8080 CADDY_HTTPS_PORT=8443 VAULTBOX_HTTP_PORT=8443
+
+services:
+  vaultbox:
+    build: .
+    image: vaultbox:local
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      VAULTBOX_DATA_DIR: /data
+      VAULTBOX_ENV_FILE: /data/.env
+      VAULTBOX_SINGLE_ORIGIN: "true"
+      VAULTBOX_DEBUG: "false"
+      VAULTBOX_HOSTNAME: ${VAULTBOX_HOSTNAME:-localhost}
+      VAULTBOX_USE_HTTPS: "true"
+      VAULTBOX_HTTP_PORT: ${VAULTBOX_HTTP_PORT:-443}
+      VAULTBOX_SEED_DATA: ${VAULTBOX_SEED_DATA:-}
+    expose:
+      - "8000"
+    volumes:
+      - vaultbox-data:/data
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "${CADDY_HTTP_PORT:-80}:${CADDY_HTTP_PORT:-80}"
+      - "${CADDY_HTTPS_PORT:-443}:${CADDY_HTTPS_PORT:-443}"
+    environment:
+      VAULTBOX_HOSTNAME: ${VAULTBOX_HOSTNAME:-localhost}
+      CADDY_EMAIL: ${CADDY_EMAIL:-}
+      CADDY_HTTP_PORT: ${CADDY_HTTP_PORT:-80}
+      CADDY_HTTPS_PORT: ${CADDY_HTTPS_PORT:-443}
+    volumes:
+      - ${CADDYFILE:-./deploy/Caddyfile.internal}:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - vaultbox
+    restart: unless-stopped
+
+volumes:
+  vaultbox-data:
+  caddy-data:
+  caddy-config:

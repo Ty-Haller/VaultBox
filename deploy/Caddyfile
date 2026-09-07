@@ -1,0 +1,17 @@
+# Public HTTPS: Caddy obtains Let's Encrypt certificates automatically.
+# Requires a real DNS name on VAULTBOX_HOSTNAME and ports 80 + 443 reachable.
+# For localhost/LAN, use Caddyfile.internal instead.
+{
+	email {$CADDY_EMAIL:}
+	http_port {$CADDY_HTTP_PORT:80}
+	https_port {$CADDY_HTTPS_PORT:443}
+}
+
+{$VAULTBOX_HOSTNAME} {
+	encode gzip
+	reverse_proxy vaultbox:8000 {
+		header_up Host {host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-For {remote_host}
+	}
+}
