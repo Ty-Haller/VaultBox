@@ -160,6 +160,8 @@ def emit(
 ) -> int:
     """Create/deliver notifications. Returns count of in-app notifications created/updated."""
     payload = payload or {}
+    from public_demo.flags import enabled as public_demo_enabled
+    skip_egress = public_demo_enabled()
     recipients = resolve_recipients(event_type, users)
     count = 0
     for user in recipients:
@@ -213,13 +215,13 @@ def emit(
             )
             count += 1
 
-        if cfg.email and user.email:
+        if cfg.email and user.email and not skip_egress:
             if send_notification_email(user, title, f'{message}\n\n{link}'.strip()):
                 if notif:
                     notif.emailed_at = timezone.now()
                     notif.save(update_fields=['emailed_at'])
 
-        if cfg.apprise:
+        if cfg.apprise and not skip_egress:
             profile, _ = UserProfile.objects.get_or_create(user=user)
             urls = profile.apprise_urls or []
             _send_apprise(urls, title, message, link, event_type, user.username, payload)

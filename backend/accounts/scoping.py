@@ -95,8 +95,10 @@ def can_write_inventory(user, access: UserAccess | None = None) -> bool:
     access = access or get_user_access(user)
     if access.is_full_admin:
         return True
+    from .models import ROLE_RANK, VaultBoxRole
+    if ROLE_RANK.get(access.global_role or '', 0) >= ROLE_RANK[VaultBoxRole.VAULT_ADMIN]:
+        return True
     for role in list(access.site_roles.values()) + list(access.vault_roles.values()):
-        from .models import ROLE_RANK, VaultBoxRole
         if ROLE_RANK.get(role, 0) >= ROLE_RANK[VaultBoxRole.VAULT_ADMIN]:
             return True
     return False

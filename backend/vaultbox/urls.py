@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/notifications/', include(notification_router.urls)),
     path('api/', include('inventory.urls')),
     path('api/admin/', include('administration.urls')),
+    path('', include('public_demo.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Pencil, Plus, Trash2, UserPlus } from 'lucide-react'
 import { adminApi } from '../../lib/adminApi'
@@ -8,7 +8,7 @@ import { Card } from '../ui/Card'
 import { DataTable } from '../ui/DataTable'
 import { Modal } from '../ui/Modal'
 import { Badge } from '../ui/Badge'
-import { RoleAssignmentPanel } from './RoleAssignmentPanel'
+import { RoleAssignmentPanel, type RoleAssignmentHandle } from './RoleAssignmentPanel'
 
 export function UserManager() {
   const [users, setUsers] = useState<AdminUser[]>([])
@@ -21,6 +21,7 @@ export function UserManager() {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const rolesRef = useRef<RoleAssignmentHandle>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -59,8 +60,12 @@ export function UserManager() {
     setSaving(true)
     setError(null)
     try {
-      if (editing) await adminApi.update('users', editing.id, form)
-      else await adminApi.create('users', form)
+      if (editing) {
+        await adminApi.update('users', editing.id, form)
+        await rolesRef.current?.save()
+      } else {
+        await adminApi.create('users', form)
+      }
       setShowForm(false)
       await load()
     } catch (e) {
@@ -147,7 +152,7 @@ export function UserManager() {
             <p className="mt-2 text-xs text-vault-500">Legacy Django Staff/Superuser flags are not used by VaultBox and have been removed.</p>
           </div>
         </div>
-        {editing && <RoleAssignmentPanel userId={editing.id} />}
+        {editing && <RoleAssignmentPanel ref={rolesRef} userId={editing.id} />}
         <div className="mt-6 flex justify-end gap-3 border-t border-vault-100 pt-4 dark:border-vault-700">
           <button type="button" onClick={() => setShowForm(false)} className="rounded-md border border-vault-200 px-4 py-2 text-sm">Cancel</button>
           <button type="button" onClick={save} disabled={saving} className="rounded-md bg-gold-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>

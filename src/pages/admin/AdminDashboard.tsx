@@ -27,26 +27,78 @@ import { adminApi } from '../../lib/adminApi'
 import { api } from '../../lib/api'
 import { Card } from '../../components/ui/Card'
 
-const sections = [
-  { to: '/admin/site-types', label: 'Site Types', icon: MapPin, countKey: 'siteTypes' as const, desc: 'Location classifications' },
-  { to: '/admin/vault-types', label: 'Vault Types', icon: Shield, countKey: 'vaultTypes' as const, desc: 'Storage container types' },
-  { to: '/admin/asset-categories', label: 'Asset Categories', icon: Layers, countKey: 'assetCategories' as const, desc: 'Precious metals, crypto, gems, watches' },
-  { to: '/admin/product-types', label: 'Bullion Products', icon: Package, countKey: 'productTypes' as const, desc: 'ASE, Gold Buffalo, Silver Maple…' },
-  { to: '/admin/metal-types', label: 'Metal Types', icon: Coins, countKey: 'metalTypes' as const, desc: 'Gold, silver, platinum...' },
-  { to: '/admin/dealers', label: 'Dealers', icon: Store, countKey: 'dealers' as const, desc: 'APMEX, JM Bullion, SD Bullion…' },
-  { to: '/admin/crypto-tokens', label: 'Crypto Tokens', icon: Bitcoin, countKey: 'cryptoTokens' as const, desc: 'BTC, ETH, Doge, custom…' },
-  { to: '/admin/coin-types', label: 'Form Factors', icon: Building, countKey: 'formFactorTypes' as const, desc: 'Bars, coins, rounds' },
-  { to: '/admin/currencies', label: 'Currencies', icon: DollarSign, countKey: 'currencies' as const, desc: 'USD, EUR, GBP...' },
-  { to: '/admin/site', label: 'Site & Hostname', icon: Globe, countKey: null, desc: 'Public DNS name, URLs, passkeys & SSO' },
-  { to: '/admin/settings', label: 'Other Settings', icon: Settings, countKey: 'settings' as const, desc: 'App configuration' },
-  { to: '/admin/price-ticker', label: 'Price Ticker', icon: LineChart, countKey: null, desc: 'Metals, crypto, stocks, forex' },
-  { to: '/admin/notifications', label: 'Notifications', icon: Bell, countKey: 'notificationOptions' as const, desc: 'Event catalog, role defaults & SMTP' },
-  { to: '/admin/backups', label: 'Backups', icon: DatabaseBackup, countKey: null, desc: 'On-demand & scheduled backups, encryption, rclone' },
-  { to: '/admin/sso', label: 'SSO / OAuth', icon: LogIn, countKey: null, desc: 'OpenID Connect login providers' },
-  { to: '/admin/audit-workflows', label: 'Audit Workflows', icon: ClipboardCheck, countKey: 'auditWorkflows' as const, desc: 'Review schedules' },
-  { to: '/admin/users', label: 'Users', icon: Users, countKey: null, desc: 'User accounts' },
-  { to: '/admin/groups', label: 'Groups & Roles', icon: KeyRound, countKey: null, desc: 'Roles, groups, site/vault access' },
-  { to: '/admin/signup-requests', label: 'Signup Requests', icon: Users, countKey: null, desc: 'Approve new account requests' },
+type CountKey =
+  | 'siteTypes'
+  | 'vaultTypes'
+  | 'assetCategories'
+  | 'productTypes'
+  | 'metalTypes'
+  | 'dealers'
+  | 'cryptoTokens'
+  | 'formFactorTypes'
+  | 'currencies'
+  | 'settings'
+  | 'notificationOptions'
+  | 'auditWorkflows'
+
+type AdminLink = {
+  to: string
+  label: string
+  icon: typeof Settings
+  countKey: CountKey | null
+  desc: string
+}
+
+const groups: { title: string; blurb: string; items: AdminLink[] }[] = [
+  {
+    title: 'Holding catalog',
+    blurb: 'Taxonomy used when creating and classifying holdings',
+    items: [
+      { to: '/admin/asset-categories', label: 'Asset Categories', icon: Layers, countKey: 'assetCategories', desc: 'Precious metals, crypto, gems, watches' },
+      { to: '/admin/product-types', label: 'Bullion Products', icon: Package, countKey: 'productTypes', desc: 'ASE, Gold Buffalo, Silver Maple…' },
+      { to: '/admin/metal-types', label: 'Metal Types', icon: Coins, countKey: 'metalTypes', desc: 'Gold, silver, platinum…' },
+      { to: '/admin/coin-types', label: 'Form Factors', icon: Building, countKey: 'formFactorTypes', desc: 'Bars, coins, rounds' },
+      { to: '/admin/crypto-tokens', label: 'Crypto Tokens', icon: Bitcoin, countKey: 'cryptoTokens', desc: 'BTC, ETH, Doge, custom…' },
+      { to: '/admin/dealers', label: 'Dealers', icon: Store, countKey: 'dealers', desc: 'APMEX, JM Bullion, SD Bullion…' },
+      { to: '/admin/currencies', label: 'Currencies', icon: DollarSign, countKey: 'currencies', desc: 'USD, EUR, GBP…' },
+    ],
+  },
+  {
+    title: 'Locations',
+    blurb: 'How sites and vaults are classified',
+    items: [
+      { to: '/admin/site-types', label: 'Site Types', icon: MapPin, countKey: 'siteTypes', desc: 'Location classifications' },
+      { to: '/admin/vault-types', label: 'Vault Types', icon: Shield, countKey: 'vaultTypes', desc: 'Storage container types' },
+    ],
+  },
+  {
+    title: 'People & access',
+    blurb: 'Who can sign in and what they can do',
+    items: [
+      { to: '/admin/users', label: 'Users', icon: Users, countKey: null, desc: 'User accounts' },
+      { to: '/admin/groups', label: 'Groups & Roles', icon: KeyRound, countKey: null, desc: 'Roles, groups, site/vault access' },
+      { to: '/admin/signup-requests', label: 'Signup Requests', icon: Users, countKey: null, desc: 'Approve new account requests' },
+      { to: '/admin/sso', label: 'SSO / OAuth', icon: LogIn, countKey: null, desc: 'OpenID Connect login providers' },
+    ],
+  },
+  {
+    title: 'Operations',
+    blurb: 'Day-to-day alerts, prices, and audit process',
+    items: [
+      { to: '/admin/price-ticker', label: 'Price Ticker', icon: LineChart, countKey: null, desc: 'Metals, crypto, stocks, forex' },
+      { to: '/admin/notifications', label: 'Notifications', icon: Bell, countKey: 'notificationOptions', desc: 'Event catalog, role defaults & SMTP' },
+      { to: '/admin/audit-workflows', label: 'Audit Workflows', icon: ClipboardCheck, countKey: 'auditWorkflows', desc: 'Review schedules' },
+    ],
+  },
+  {
+    title: 'System',
+    blurb: 'Host identity, app settings, and data protection',
+    items: [
+      { to: '/admin/site', label: 'Site & Hostname', icon: Globe, countKey: null, desc: 'Public DNS name, URLs, passkeys & SSO' },
+      { to: '/admin/settings', label: 'Other Settings', icon: Settings, countKey: 'settings', desc: 'App configuration' },
+      { to: '/admin/backups', label: 'Backups', icon: DatabaseBackup, countKey: null, desc: 'On-demand & scheduled backups, encryption, rclone' },
+    ],
+  },
 ]
 
 export function AdminDashboard() {
@@ -85,16 +137,16 @@ export function AdminDashboard() {
 
   const handleReset = async () => {
     if (resetting) return
-    if (resetConfirm.trim().toUpperCase() !== 'RESET') {
+    if (resetConfirm.trim() !== 'RESET') {
       setResetOk(null)
-      setResetError('Type RESET to confirm.')
+      setResetError('Type RESET (all caps) to confirm.')
       return
     }
     setResetting(true)
     setResetError(null)
     setResetOk(null)
     try {
-      const result = await api.seedData()
+      const result = await api.seedData('RESET')
       await refresh()
       await admin.refresh()
       setResetConfirm('')
@@ -115,9 +167,9 @@ export function AdminDashboard() {
 
   const handlePurgeStalePasskeys = async () => {
     if (purging) return
-    if (purgeConfirm.trim().toUpperCase() !== 'PURGE') {
+    if (purgeConfirm.trim() !== 'PURGE') {
       setPurgeOk(null)
-      setPurgeError('Type PURGE to confirm.')
+      setPurgeError('Type PURGE (all caps) to confirm.')
       return
     }
     setPurging(true)
@@ -144,7 +196,7 @@ export function AdminDashboard() {
       <div>
         <h2 className="text-xl font-bold text-vault-900">Administration</h2>
         <p className="text-sm text-vault-500">
-          Configure asset taxonomy, product catalog, workflows, integrations, and users
+          Catalog, access, operations, and system settings
         </p>
       </div>
 
@@ -154,36 +206,44 @@ export function AdminDashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {sections.map(({ to, label, icon: Icon, countKey, desc }) => {
-          const count = countKey ? admin[countKey].length : undefined
-          return (
-            <Link key={to} to={to}>
-              <Card className="transition-shadow hover:shadow-md">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-vault-100">
-                    <Icon className="h-5 w-5 text-vault-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-vault-900">{label}</h3>
-                    <p className="mt-0.5 text-xs text-vault-500">{desc}</p>
-                    {count !== undefined && (
-                      <p className="mt-2 font-mono text-sm text-gold-500">{count} records</p>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          )
-        })}
-      </div>
+      {groups.map((group) => (
+        <section key={group.title} className="space-y-3">
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-vault-500">{group.title}</h3>
+            <p className="mt-0.5 text-xs text-vault-400">{group.blurb}</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {group.items.map(({ to, label, icon: Icon, countKey, desc }) => {
+              const count = countKey ? admin[countKey].length : undefined
+              return (
+                <Link key={to} to={to}>
+                  <Card className="h-full transition-shadow hover:shadow-md">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-vault-100 dark:bg-vault-800">
+                        <Icon className="h-5 w-5 text-vault-600 dark:text-vault-300" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-vault-900 dark:text-white">{label}</h4>
+                        <p className="mt-0.5 text-xs text-vault-500">{desc}</p>
+                        {count !== undefined && (
+                          <p className="mt-2 font-mono text-sm text-gold-500">{count} records</p>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      ))}
 
       {canReset && (
         <Card className="bg-red-50 dark:bg-red-950/30">
           <h3 className="text-sm font-semibold text-red-700 dark:text-red-300">Danger zone</h3>
           <p className="mt-1 text-sm text-vault-500">
             Replace all sites, vaults, and holdings with the demo seed. This cannot be undone.
-            Type <code className="font-mono text-vault-700 dark:text-vault-200">RESET</code> to confirm.
+            Type <code className="font-mono text-vault-700 dark:text-vault-200">RESET</code> (all caps) to confirm.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <input
@@ -221,7 +281,7 @@ export function AdminDashboard() {
             <p className="mt-1 text-sm text-vault-500">
               After a hostname / RP ID change, passkeys for previous hosts stay in the database so you can revert.
               Once you have enrolled on this host, purge the leftovers. Type{' '}
-              <code className="font-mono text-vault-700 dark:text-vault-200">PURGE</code> to confirm.
+              <code className="font-mono text-vault-700 dark:text-vault-200">PURGE</code> (all caps) to confirm.
             </p>
             {stale && (
               <p className="mt-2 font-mono text-xs text-vault-600 dark:text-vault-400">

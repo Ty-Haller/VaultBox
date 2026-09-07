@@ -19,6 +19,7 @@ import { Card, CardHeader } from '../../components/ui/Card'
 import { FormField, inputClass, selectClass } from '../../components/ui/FormField'
 import { Modal } from '../../components/ui/Modal'
 import { adminApi } from '../../lib/adminApi'
+import { useDemo } from '../../context/DemoContext'
 import { formatBytes, formatDateTime } from '../../lib/utils'
 import type { BackupRecord, BackupSchedule, BackupStorageInfo, RcloneRemote } from '../../types/backups'
 
@@ -30,6 +31,7 @@ const STATUS_VARIANT: Record<BackupRecord['status'], 'success' | 'danger' | 'war
 }
 
 export function BackupsPage() {
+  const { publicDemo } = useDemo()
   const [backups, setBackups] = useState<BackupRecord[]>([])
   const [, setSchedule] = useState<BackupSchedule | null>(null)
   const [remotes, setRemotes] = useState<RcloneRemote[]>([])
@@ -89,7 +91,7 @@ export function BackupsPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [publicDemo])
 
   useEffect(() => { load() }, [load])
 
@@ -290,8 +292,16 @@ export function BackupsPage() {
         </button>
       </div>
 
+      {publicDemo && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          Public demo locks backups. This instance is wiped on a timer and must not export or restore operator data.
+        </div>
+      )}
+
       {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       {success && <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{success}</p>}
+
+      <fieldset disabled={publicDemo} className={publicDemo ? 'space-y-6 opacity-60' : 'contents'}>
 
       {storage && (
         <Card>
@@ -728,6 +738,7 @@ export function BackupsPage() {
           </div>
         )}
       </Modal>
+      </fieldset>
     </div>
   )
 }

@@ -75,6 +75,12 @@ SECRET_KEY = _load_secret('SECRET_KEY')
 VAULTBOX_ENCRYPTION_KEY = _load_secret('VAULTBOX_ENCRYPTION_KEY')
 
 DEBUG = env_bool('VAULTBOX_DEBUG', True)
+VAULTBOX_PUBLIC_DEMO = env_bool('VAULTBOX_PUBLIC_DEMO', False)
+try:
+    _demo_reset = int(os.environ.get('VAULTBOX_DEMO_RESET_SECONDS', '1800') or '1800')
+except ValueError:
+    _demo_reset = 1800
+VAULTBOX_DEMO_RESET_SECONDS = max(60, _demo_reset)
 
 _data_dir = os.environ.get('VAULTBOX_DATA_DIR', '').strip()
 DATA_DIR = Path(_data_dir).resolve() if _data_dir else BASE_DIR
@@ -100,6 +106,7 @@ INSTALLED_APPS = [
     'inventory',
     'administration',
     'accounts',
+    'public_demo',
 ]
 
 MIDDLEWARE = [
