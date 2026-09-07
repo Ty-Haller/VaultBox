@@ -74,6 +74,8 @@ On the login page: **Start demo admin session** (Full Admin, no passkey) or **Re
 
 VaultBox remains local-first software you run yourself. The public demo is a disposable instance for clicking around; it is not a hosted product.
 
+Fly.io already records request counts, latency, and machine health for that demo (about 15 days of retention). Grafana: [fly-metrics.net](https://fly-metrics.net). Query notes and a Grok Bot prompt: [docs/public-demo-metrics.md](docs/public-demo-metrics.md).
+
 Optional self-hosted demo mode is **off by default**. Set `VAULTBOX_PUBLIC_DEMO=1` and point `VAULTBOX_DATA_DIR` / `VAULTBOX_ENV_FILE` at an isolated directory (see [`.env.example`](.env.example)). Timed wipe interval is `VAULTBOX_DEMO_RESET_SECONDS` (default 1800). Never point that flag at a real holdings database.
 
 Local helper (Vite + Django, isolated `backend/demo-data/`):
