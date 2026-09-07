@@ -221,7 +221,18 @@ h1 {
   color: var(--navy-200);
   font-size: 1.08rem;
   max-width: 38rem;
-  margin: 0 0 28px;
+  margin: 0 0 16px;
+}
+
+.compat-note {
+  display: inline-block;
+  margin: 0 0 24px;
+  padding: 10px 14px;
+  border: 1px solid rgba(232, 185, 35, 0.35);
+  border-radius: 10px;
+  color: var(--gold-soft);
+  font-size: 0.92rem;
+  max-width: 38rem;
 }
 
 .cta-row {
