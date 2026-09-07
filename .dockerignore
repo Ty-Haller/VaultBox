@@ -5,6 +5,7 @@ node_modules
 dist
 logs
 backend/db.sqlite3
+backend/demo-data
 backend/media
 backend/backups
 backend/staticfiles

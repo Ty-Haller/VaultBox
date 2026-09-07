@@ -1,0 +1,52 @@
+# Public demo on Fly.io (https://demo.vaultboxoss.com).
+# Local-first installs do not use this file. Secrets stay on the /data volume.
+
+app = "vaultbox-demo"
+primary_region = "iad"
+kill_signal = "SIGTERM"
+kill_timeout = 30
+swap_size_mb = 512
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  VAULTBOX_PUBLIC_DEMO = "1"
+  VAULTBOX_HOSTNAME = "demo.vaultboxoss.com"
+  VAULTBOX_USE_HTTPS = "true"
+  VAULTBOX_SINGLE_ORIGIN = "true"
+  VAULTBOX_DEBUG = "false"
+  VAULTBOX_HTTP_PORT = "443"
+  VAULTBOX_DATA_DIR = "/data"
+  VAULTBOX_ENV_FILE = "/data/.env"
+  VAULTBOX_DEMO_RESET_SECONDS = "1800"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 25
+    hard_limit = 50
+
+[[http_service.checks]]
+  grace_period = "90s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/api/auth/csrf/"
+  [http_service.checks.headers]
+    Host = "demo.vaultboxoss.com"
+
+[mounts]
+  source = "vaultbox_demo_data"
+  destination = "/data"
+  initial_size = "1gb"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

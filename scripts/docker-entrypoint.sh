@@ -12,9 +12,13 @@ cd /app/backend
 python3 manage.py migrate --noinput
 python3 manage.py seed_roles
 python3 manage.py seed_admin
-python3 manage.py seed_notifications
-if [ "${VAULTBOX_SEED_DATA:-}" = "1" ]; then
-  python3 manage.py seed_data
+if [ "${VAULTBOX_PUBLIC_DEMO:-}" = "1" ]; then
+  python3 manage.py reset_public_demo
+else
+  python3 manage.py seed_notifications
+  if [ "${VAULTBOX_SEED_DATA:-}" = "1" ]; then
+    python3 manage.py seed_data
+  fi
 fi
 python3 manage.py collectstatic --noinput
 

@@ -93,6 +93,17 @@ _admin_host, _admin_https = load_admin_override(DATA_DIR / 'db.sqlite3')
 _boot_host = _admin_host or VAULTBOX_HOSTNAME
 _boot_https = _admin_https if _admin_host else VAULTBOX_USE_HTTPS
 ALLOWED_HOSTS, CORS_ALLOWED_ORIGINS = hosts_and_origins(_boot_host, _boot_https)
+# Fly private-network health checks and the default *.fly.dev hostname.
+_fly_app = os.environ.get('FLY_APP_NAME', '').strip()
+if _fly_app:
+    _fly_host = f'{_fly_app}.fly.dev'
+    if _fly_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_fly_host)
+    if '.internal' not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append('.internal')
+    _fly_origin = f'https://{_fly_host}'
+    if _fly_origin not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(_fly_origin)
 
 INSTALLED_APPS = [
     'django.contrib.admin',

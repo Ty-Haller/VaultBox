@@ -84,7 +84,7 @@ When the flag is on:
 - Hostname, SSO/OAuth, and backups stay visible in Admin but cannot be changed
 - Email and Apprise are not sent
 
-VaultBox remains local-first software you run yourself. Demo mode is how a maintainer can put a disposable copy on the internet; it is not a hosted product.
+VaultBox remains local-first software you run yourself. Demo mode is how a maintainer can put a disposable copy on the internet; it is not a hosted product. The Fly.io instance at `demo.vaultboxoss.com` is documented here once it is live.
 
 ## HTTPS (Caddy)
 
