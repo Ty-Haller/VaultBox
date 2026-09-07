@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Install and run VaultBox with Docker (single container: UI + API + SQLite).
 # From a clone:  ./scripts/bootstrap.sh
-# Repo is private — clone with access, then run this script.
 set -euo pipefail
 
 REPO_DEFAULT="https://github.com/Ty-Haller/VaultBox.git"
