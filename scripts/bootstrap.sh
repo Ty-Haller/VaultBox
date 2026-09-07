@@ -75,10 +75,6 @@ if [ ! -f "$ROOT/.env" ]; then
     printf 'VAULTBOX_ENCRYPTION_KEY=%s\n' "$(python3 -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())' 2>/dev/null || openssl rand -base64 32)"
     printf 'VAULTBOX_HOSTNAME=%s\n' "$HOSTNAME_VAL"
     printf 'VAULTBOX_USE_HTTPS=%s\n' "$USE_HTTPS"
-    printf 'VAULTBOX_HTTP_PORT=%s\n' "$PORT"
-    printf 'VAULTBOX_SINGLE_ORIGIN=true\n'
-    printf 'VAULTBOX_DEBUG=false\n'
-    printf 'VAULTBOX_SEED_DATA=%s\n' "$SEED_ANS"
   } > "$ROOT/.env"
   chmod 600 "$ROOT/.env"
 else
@@ -113,6 +109,7 @@ docker run -d \
   -e VAULTBOX_ENV_FILE=/data/.env \
   -e VAULTBOX_SINGLE_ORIGIN=true \
   -e "VAULTBOX_HTTP_PORT=$PORT" \
+  -e "VAULTBOX_SEED_DATA=$SEED_ANS" \
   -p "127.0.0.1:${PORT}:8000" \
   -v vaultbox-data:/data \
   "$IMAGE" >/dev/null

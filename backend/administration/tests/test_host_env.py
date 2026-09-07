@@ -14,6 +14,20 @@ from vaultbox.host_env import (
 
 
 class HostEnvTests(SimpleTestCase):
+    def setUp(self):
+        self._env_patch = patch.dict(
+            'os.environ',
+            {
+                'VAULTBOX_SINGLE_ORIGIN': '',
+                'VAULTBOX_HTTP_PORT': '',
+            },
+            clear=False,
+        )
+        self._env_patch.start()
+
+    def tearDown(self):
+        self._env_patch.stop()
+
     def test_normalize_strips_scheme_and_port(self):
         self.assertEqual(normalize_hostname('https://Vault.Example.com:8443/path'), 'vault.example.com')
 
