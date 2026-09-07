@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import secrets
 from dataclasses import dataclass
+from urllib.parse import urlparse
 
 from authlib.integrations.requests_client import OAuth2Session
 from authlib.oauth2.rfc7636 import create_s256_code_challenge
@@ -53,6 +54,24 @@ def _provider_config(provider_id: str, request=None) -> dict:
     return cfg
 
 
+def safe_post_login_path(value: str | None, *, fallback: str = '/') -> str:
+    """Allow only a same-origin relative path (one leading slash, not //)."""
+    raw = (value or '').strip()
+    if not raw:
+        return fallback
+    if not raw.startswith('/') or raw.startswith('//') or raw.startswith('/\\'):
+        return fallback
+    lowered = raw.lower()
+    if '://' in raw or lowered.startswith(('/javascript:', '/data:')):
+        return fallback
+    if any(c in raw for c in ('\\', '\n', '\r', '\t', '\0')):
+        return fallback
+    parsed = urlparse(raw)
+    if parsed.scheme or parsed.netloc:
+        return fallback
+    return raw
+
+
 def start_oauth_flow(
     provider_id: str,
     redirect_after: str = '/',
@@ -68,7 +87,7 @@ def start_oauth_flow(
         state=state,
         code_verifier=code_verifier,
         provider=provider_id,
-        redirect_after=redirect_after,
+        redirect_after=safe_post_login_path(redirect_after),
         link_user=link_user,
     )
     client = OAuth2Session(
@@ -104,7 +123,7 @@ def complete_oauth_flow(provider_id: str, code: str, state: str, request=None) -
     oauth_state = OAuthState.objects.filter(state=state, provider=provider_id).select_related('link_user').first()
     if not oauth_state:
         raise ValueError('Invalid OAuth state')
-    redirect_after = oauth_state.redirect_after or '/'
+    redirect_after = safe_post_login_path(oauth_state.redirect_after)
     link_user = oauth_state.link_user
 
     userinfo = _fetch_oauth_userinfo(provider_id, code, oauth_state, request)

@@ -60,7 +60,7 @@ export function UserSettingsPage() {
     }
     const oauthError = searchParams.get('oauth_error')
     if (oauthError) {
-      setError(decodeURIComponent(oauthError))
+      setError('SSO link failed. Try again.')
       const next = new URLSearchParams(searchParams)
       next.delete('oauth_error')
       setSearchParams(next, { replace: true })

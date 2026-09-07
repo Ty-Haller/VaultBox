@@ -26,7 +26,7 @@ export function LoginPage() {
 
   useEffect(() => {
     const oauthError = searchParams.get('oauth_error')
-    if (oauthError) setError(decodeURIComponent(oauthError))
+    if (oauthError) setError('SSO sign-in failed. Try again or use a passkey.')
     if (searchParams.get('sso_pending') === '1') {
       setError('Your SSO account is pending admin approval. You will be able to sign in once a Full Admin approves your request.')
     }
