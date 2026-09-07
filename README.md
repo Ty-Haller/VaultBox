@@ -14,14 +14,34 @@ Site → Vault → Holding
       Photos    Photos + documents + QR labels
 ```
 
-Passkeys (WebAuthn) are the sign-in method. Use **http://localhost:5173** in development, or the Docker App URL — `127.0.0.1` will fail passkey registration.
+Passkeys (WebAuthn) are the sign-in method. Use **http://localhost:5173** in development, or the container App URL — `127.0.0.1` will fail passkey registration.
 
 ## Requirements
 
-- **Docker** (recommended install), or Python 3.11+ and Node.js 20+
+- **Docker Engine** or **Podman**, or Python 3.11+ and Node.js 20+
 - A browser that supports passkeys
 
-## Install with Docker
+## Docker vs Podman
+
+Either engine can build and run the image. `scripts/bootstrap.sh` uses `docker` if `docker info` works, otherwise **Podman**.
+
+| | Docker Engine | Podman (Fedora/RHEL default) |
+|---|---|---|
+| Install | [docs.docker.com/engine/install](https://docs.docker.com/engine/install/) | `sudo dnf install -y podman podman-compose` |
+| Daemon | `sudo systemctl enable --now docker`; user in `docker` group | Rootless; no daemon |
+| CLI | `docker` / `docker compose` | `podman` / `podman compose` (or `DOCKER=podman ./scripts/bootstrap.sh`) |
+| HTTP bind | Script publishes **127.0.0.1:8000** (avoids IPv6 `localhost` resets on rootless stacks) | Same |
+| Ports 80/443 | Fine as root/docker group | Rootless cannot bind 80/443 unless you lower `net.ipv4.ip_unprivileged_port_start`; use 8080/8443 instead |
+
+Optional shim if you want the `docker` command on a Podman host:
+
+```bash
+mkdir -p ~/.local/bin
+printf '%s\n' '#!/bin/sh' 'exec podman "$@"' > ~/.local/bin/docker
+chmod +x ~/.local/bin/docker
+```
+
+## Install (HTTP)
 
 From a clone (repo is private — you need access):
 
@@ -32,14 +52,60 @@ chmod +x scripts/bootstrap.sh
 ./scripts/bootstrap.sh
 ```
 
-The script builds the image, writes `.env` if missing, and publishes the app (default **http://localhost:8000**). Open that URL and **Register Admin Passkey**. Data lives in the Docker volume `vaultbox-data`.
+The script builds the image, writes `.env` if missing, and publishes **http://localhost:8000**. Open that URL (not `127.0.0.1`) and **Register Admin Passkey**. Data lives in the volume `vaultbox-data`.
 
 ```bash
-docker logs -f vaultbox    # logs
-docker stop vaultbox       # stop
+docker logs -f vaultbox    # or: podman logs -f vaultbox
+docker stop vaultbox
 ```
 
-Or: `docker compose up --build -d` after copying [`.env.example`](.env.example) to `.env`.
+Compose (same HTTP setup), after copying [`.env.example`](.env.example) to `.env`:
+
+```bash
+docker compose up --build -d
+# or: podman compose up --build -d
+```
+
+## HTTPS (Caddy)
+
+Caddy sits in front of VaultBox, terminates TLS, and forwards to the app. Set `VAULTBOX_HOSTNAME` to the name in the browser (that is also the WebAuthn RP ID). After a hostname change, register a new admin passkey at the new App URL.
+
+Stop the HTTP container first if it is already running (`docker stop vaultbox` or `docker compose down`).
+
+**LAN / localhost** (Caddy local CA, no public DNS):
+
+```bash
+# .env should include VAULTBOX_HOSTNAME=localhost (or vault.home.arpa)
+docker compose -f docker-compose.https.yml up --build -d
+# Copy Caddy's local CA onto the host and trust it in the OS/browser (once):
+docker compose -f docker-compose.https.yml cp \
+  caddy:/data/caddy/pki/authorities/local/root.crt ./caddy-local-root.crt
+```
+
+Import `caddy-local-root.crt` (Firefox/Chrome certificate settings, or `sudo trust anchor ./caddy-local-root.crt` on Fedora). Open **https://localhost/login** (or `https://$VAULTBOX_HOSTNAME/login`). Keep `tls internal` in `deploy/Caddyfile.internal`.
+
+**Public hostname** (Let’s Encrypt): DNS for `VAULTBOX_HOSTNAME` must point here, and ports 80 + 443 must be reachable.
+
+```bash
+export VAULTBOX_HOSTNAME=vault.example.com
+export CADDY_EMAIL=you@example.com
+export CADDYFILE=./deploy/Caddyfile
+docker compose -f docker-compose.https.yml up --build -d
+```
+
+**Rootless Podman** (cannot bind 80/443):
+
+```bash
+export CADDY_HTTP_PORT=8080
+export CADDY_HTTPS_PORT=8443
+export VAULTBOX_HTTP_PORT=8443
+export VAULTBOX_HOSTNAME=localhost
+docker compose -f docker-compose.https.yml up --build -d
+```
+
+Then use **https://localhost:8443/login**.
+
+Caddy files: [`deploy/Caddyfile.internal`](deploy/Caddyfile.internal) (LAN) and [`deploy/Caddyfile`](deploy/Caddyfile) (Let’s Encrypt). Traefik or nginx would work the same way: TLS in front, proxy to `vaultbox:8000`, send `Host` and `X-Forwarded-Proto`.
 
 ## Quick start (development)
 
@@ -140,7 +206,7 @@ Passkey login is always on. SSO is optional under **Admin → SSO / OAuth**. Cal
 
 `{backend-base}/api/auth/oauth/{provider-id}/callback/`
 
-Set the public hostname in `.env` (`VAULTBOX_HOSTNAME`, optional `VAULTBOX_USE_HTTPS=true`) or under **Admin → Site & Hostname**. Open the **App URL** shown on that page — passkeys fail if the browser host does not match the RP ID. `localhost` keeps ports 5173 / 8000; `127.0.0.1` is not valid for passkeys. After a hostname/RP ID change, open the new App URL and **register a new admin passkey** (login offers bootstrap because that host has no keys yet). Keep the old session open until that succeeds if you may need to revert. When the new host has a key, Full Admin can remove leftover old-host passkeys from **Admin → Danger zone**.
+Set the public hostname in `.env` (`VAULTBOX_HOSTNAME`, optional `VAULTBOX_USE_HTTPS=true`) or under **Admin → Site & Hostname**. Open the **App URL** shown on that page — passkeys fail if the browser host does not match the RP ID. Dev `localhost` uses ports 5173 / 8000; Docker HTTP uses **http://localhost:8000**; Docker+Caddy uses **https://** plus that hostname. `127.0.0.1` is not valid for passkeys. After a hostname/RP ID change, open the new App URL and **register a new admin passkey** (login offers bootstrap because that host has no keys yet). Keep the old session open until that succeeds if you may need to revert. When the new host has a key, Full Admin can remove leftover old-host passkeys from **Admin → Danger zone**.
 
 ## Backups
 
