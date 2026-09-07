@@ -19,7 +19,7 @@ Project site: [https://vaultboxoss.com](https://vaultboxoss.com) (GitHub Pages, 
 ## Requirements
 
 - **Docker Engine** or **Podman**, or Python 3.11+ and Node.js 20+
-- A browser that supports passkeys
+- A **desktop** browser that supports passkeys. VaultBox does **not** render on phones or tablets yet; the app shows a desktop-required screen instead.
 
 ## Docker vs Podman
 
@@ -68,7 +68,7 @@ docker compose up --build -d
 
 ## Public demo
 
-**[LIVE DEMO](https://demo.vaultboxoss.com)** — a throwaway copy with fake seed data. It wipes every 30 minutes and drops visitor passkeys. Do not enter real secrets, seed phrases, or backup passwords.
+**[LIVE DEMO](https://demo.vaultboxoss.com)** — a throwaway copy with fake seed data. It wipes every 30 minutes and drops visitor passkeys. Do not enter real secrets, seed phrases, or backup passwords. **Desktop browser required** (mobile is not supported yet).
 
 On the login page: **Start demo admin session** (Full Admin, no passkey) or **Register a passkey** (Viewer). Hostname, SSO/OAuth, backups, and file uploads stay visible but cannot be changed. Email and Apprise are not sent.
 

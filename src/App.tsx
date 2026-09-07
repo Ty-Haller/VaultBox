@@ -6,6 +6,7 @@ import { PricesProvider } from './context/PricesContext'
 import { AdminProvider } from './context/AdminContext'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { Layout } from './components/layout/Layout'
+import { UnsupportedClientGate } from './components/layout/UnsupportedClientGate'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { SetupPasskeyPage } from './pages/SetupPasskeyPage'
@@ -70,6 +71,7 @@ function AppProviders() {
 
 export default function App() {
   return (
+    <UnsupportedClientGate>
     <AuthProvider>
       <DemoProvider>
         <BrowserRouter>
@@ -136,5 +138,6 @@ export default function App() {
         </BrowserRouter>
       </DemoProvider>
     </AuthProvider>
+    </UnsupportedClientGate>
   )
 }
