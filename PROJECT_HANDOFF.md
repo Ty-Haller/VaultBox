@@ -69,7 +69,7 @@ Existing DBs encrypted with the old in-repo defaults must copy those two strings
 ## Remaining (not this local beta)
 
 - `DEBUG=False` cookie hardening beyond HTTPS-only cookies; TLS reverse proxy
-- Tests / CI / LICENSE
+- Tests / CI (LICENSE is Apache-2.0)
 - `api_rate_limit` is still an unused setting
 - Optional: CSV on Audits/Dashboard, charts on purchase/sale PDF
 

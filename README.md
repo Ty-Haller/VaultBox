@@ -6,15 +6,12 @@
 
 **Hard asset inventory** for bullion, crypto, and other vaulted goods. Local-first: you run it on your machine. It is not a public internet service.
 
-Status: **0.1.0-beta** · private
-
-```
-Site → Vault → Holding
-         ↓         ↓
-      Photos    Photos + documents + QR labels
-```
+[![License](https://img.shields.io/badge/license-Apache%202.0-e8b923?labelColor=111b24)](LICENSE)
+[![Status](https://img.shields.io/badge/status-0.1.0--beta-8aa4bc?labelColor=111b24)](README.md)
 
 Passkeys (WebAuthn) are the sign-in method. Use **http://localhost:5173** in development, or the container App URL — `127.0.0.1` will fail passkey registration.
+
+Project site (static): [site/index.html](site/index.html). After GitHub Pages is on: https://ty-haller.github.io/VaultBox/
 
 ## Requirements
 
@@ -43,7 +40,7 @@ chmod +x ~/.local/bin/docker
 
 ## Install (HTTP)
 
-From a clone (repo is private — you need access):
+From a clone:
 
 ```bash
 git clone https://github.com/Ty-Haller/VaultBox.git
@@ -235,9 +232,38 @@ Authenticated JSON at `/api/`. UUID primary keys.
 
 ## Tech stack
 
-**Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, Recharts, React Router
+Icons from [Material Design Icons](https://pictogrammers.com/library/mdi/) (Pictogrammers). Vite and Django have no first-party MDI brand marks, so those two use `lightning-bolt` and `web`.
 
-**Backend:** Django 6.1, Django REST Framework, SQLite, Pillow, ReportLab, qrcode, webauthn, cryptography, Apprise
+<p>
+  <a href="https://react.dev"><img src="docs/brand/mdi/react.svg" width="28" height="28" alt="React"></a>
+  &nbsp;
+  <a href="https://www.typescriptlang.org"><img src="docs/brand/mdi/language-typescript.svg" width="28" height="28" alt="TypeScript"></a>
+  &nbsp;
+  <a href="https://vite.dev"><img src="docs/brand/mdi/lightning-bolt.svg" width="28" height="28" alt="Vite"></a>
+  &nbsp;
+  <a href="https://tailwindcss.com"><img src="docs/brand/mdi/tailwind.svg" width="28" height="28" alt="Tailwind CSS"></a>
+  &nbsp;
+  <a href="https://www.djangoproject.com"><img src="docs/brand/mdi/web.svg" width="28" height="28" alt="Django"></a>
+  &nbsp;
+  <a href="https://www.sqlite.org"><img src="docs/brand/mdi/database.svg" width="28" height="28" alt="SQLite"></a>
+  &nbsp;
+  <a href="https://www.docker.com"><img src="docs/brand/mdi/docker.svg" width="28" height="28" alt="Docker"></a>
+</p>
+
+React 19 · TypeScript · Vite · Tailwind CSS v4 · Django 6 · SQLite · Docker (or Podman)
+
+Also: Django REST Framework, Recharts, React Router, Pillow, ReportLab, qrcode, webauthn, cryptography, Apprise.
+
+## Support
+
+VaultBox is free, local-first software. If it is useful, you can fund development:
+
+- [GitHub Sponsors](https://github.com/sponsors/Ty-Haller)
+- Buy Me a Coffee and PayPal.Me — add those handles in [`site/support.json`](site/support.json) once the pages exist; the [project site](site/index.html) will show the buttons.
+
+## License
+
+[Apache License 2.0](LICENSE). See [NOTICE](NOTICE). Contributions are under the same license ([CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ## Security
 

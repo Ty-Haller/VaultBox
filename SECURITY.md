@@ -16,4 +16,6 @@ VaultBox is a **local-first** inventory app. Treat the machine that runs it as t
 
 ## Reporting
 
-This repository is private. If you find a vulnerability, tell the operator directly — do not file a public issue with exploit details.
+Please **do not** file a public issue with exploit details.
+
+Use [GitHub private vulnerability reporting](https://github.com/Ty-Haller/VaultBox/security/advisories/new) so the maintainer can patch before the report is public. If that form is unavailable, contact the maintainer through GitHub.
