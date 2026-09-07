@@ -113,7 +113,7 @@ docker run -d \
   -e VAULTBOX_ENV_FILE=/data/.env \
   -e VAULTBOX_SINGLE_ORIGIN=true \
   -e "VAULTBOX_HTTP_PORT=$PORT" \
-  -p "${PORT}:8000" \
+  -p "127.0.0.1:${PORT}:8000" \
   -v vaultbox-data:/data \
   "$IMAGE" >/dev/null
 
