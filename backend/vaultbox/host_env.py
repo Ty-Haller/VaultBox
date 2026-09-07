@@ -156,6 +156,12 @@ def hosts_and_origins(hostname: str, use_https: bool) -> tuple[list[str], list[s
     be = backend_base_url(host or 'localhost', use_https)
     origins.add(fe)
     origins.add(be)
+    if env_single_origin():
+        port = env_public_port()
+        if port is None:
+            port = 443 if use_https else 80
+        scheme = 'https' if use_https else 'http'
+        origins.add(_with_port(scheme, '127.0.0.1', port))
     if use_https and is_dev_hostname(host or 'localhost') and not env_single_origin():
         origins.add(frontend_base_url(host or 'localhost', False))
     return sorted(hosts), sorted(origins)

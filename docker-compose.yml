@@ -3,7 +3,7 @@ services:
     build: .
     image: vaultbox:local
     ports:
-      - "${VAULTBOX_HTTP_PORT:-8000}:8000"
+      - "127.0.0.1:${VAULTBOX_HTTP_PORT:-8000}:8000"
     env_file:
       - path: .env
         required: false
