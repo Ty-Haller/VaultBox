@@ -1,0 +1,62 @@
+name: Bug report
+description: Something is broken or unexpected.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        VaultBox is local-first. Open the App URL that matches the WebAuthn RP ID (`http://localhost:5173` in development, not `127.0.0.1`).
+
+        **Do not** put exploit details here. Use [private vulnerability reporting](https://github.com/Ty-Haller/VaultBox/security/advisories/new).
+  - type: dropdown
+    id: how-run
+    attributes:
+      label: How you run it
+      options:
+        - Docker (`scripts/bootstrap.sh` or Compose)
+        - Podman
+        - Local Python + Node (`npm run start` / `runserver`)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: app-url
+    attributes:
+      label: App URL in the browser
+      description: The exact origin you opened (host, port, http vs https).
+      placeholder: http://localhost:8000
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: 0.1.0-beta or git SHA
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Redact `.env` values, backup passwords, and holding secrets.
