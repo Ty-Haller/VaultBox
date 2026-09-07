@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-label="VaultBox">
+  <!-- Full square fill: GitHub crops this to a circle. No rounded outer rect, no transparency. -->
+  <rect width="1024" height="1024" fill="#111b24"/>
+  <!-- Strongbox inset so the gold stroke survives a circular crop -->
+  <rect x="196" y="236" width="632" height="572" rx="72" fill="#1a2836" stroke="#e8b923" stroke-width="36"/>
+  <path d="M226 386h572" stroke="#e8b923" stroke-width="24" stroke-linecap="round" opacity="0.85"/>
+  <circle cx="292" cy="312" r="22" fill="#e8b923"/>
+  <circle cx="732" cy="312" r="22" fill="#e8b923"/>
+  <circle cx="292" cy="732" r="22" fill="#e8b923"/>
+  <circle cx="732" cy="732" r="22" fill="#e8b923"/>
+  <circle cx="512" cy="592" r="148" fill="#111b24" stroke="#e8b923" stroke-width="32"/>
+  <circle cx="512" cy="592" r="82" fill="none" stroke="#d4a017" stroke-width="20"/>
+  <circle cx="512" cy="592" r="34" fill="#e8b923"/>
+  <path d="M512 464v38M512 682v38M384 592h38M602 592h38" stroke="#e8b923" stroke-width="22" stroke-linecap="round"/>
+</svg>
