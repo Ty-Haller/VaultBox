@@ -232,8 +232,6 @@ Authenticated JSON at `/api/`. UUID primary keys.
 
 ## Tech stack
 
-Icons from [Material Design Icons](https://pictogrammers.com/library/mdi/) (Pictogrammers). Vite and Django have no first-party MDI brand marks, so those two use `lightning-bolt` and `web`.
-
 <p>
   <a href="https://react.dev"><img src="docs/brand/mdi/react.svg" width="28" height="28" alt="React"></a>
   &nbsp;
