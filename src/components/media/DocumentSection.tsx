@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { Download, FileText, Trash2, Upload } from 'lucide-react'
 import type { Document, DocumentType } from '../../types'
+import { useDemo } from '../../context/DemoContext'
 import { api } from '../../lib/api'
 import { formatDateTime } from '../../lib/utils'
 import { Card, CardHeader } from '../ui/Card'
@@ -13,12 +14,13 @@ interface DocumentSectionProps {
 }
 
 export function DocumentSection({ documents, holdingId, onChange }: DocumentSectionProps) {
+  const { publicDemo } = useDemo()
   const inputRef = useRef<HTMLInputElement>(null)
   const [docType, setDocType] = useState<DocumentType>('invoice')
   const [uploading, setUploading] = useState(false)
 
   const upload = async (files: FileList | null) => {
-    if (!files?.length) return
+    if (publicDemo || !files?.length) return
     setUploading(true)
     try {
       for (const file of Array.from(files)) {
@@ -40,6 +42,11 @@ export function DocumentSection({ documents, holdingId, onChange }: DocumentSect
   return (
     <Card>
       <CardHeader title="Documents" subtitle="Invoices, certificates, assay reports" />
+      {publicDemo && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          Public demo locks file uploads. This instance is wiped on a timer and must not store visitor files.
+        </div>
+      )}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <select
           value={docType}
@@ -55,13 +62,13 @@ export function DocumentSection({ documents, holdingId, onChange }: DocumentSect
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          disabled={uploading}
+          disabled={uploading || publicDemo}
           className="inline-flex items-center gap-1.5 rounded-md bg-vault-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-vault-700 disabled:opacity-50"
         >
           <Upload className="h-3.5 w-3.5" />
           {uploading ? 'Uploading...' : 'Upload'}
         </button>
-        <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" multiple className="hidden" onChange={(e) => upload(e.target.files)} />
+        <input ref={inputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" multiple className="hidden" disabled={publicDemo} onChange={(e) => upload(e.target.files)} />
       </div>
 
       {documents.length === 0 ? (

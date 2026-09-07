@@ -14,7 +14,7 @@ Passkeys (WebAuthn) are the sign-in method. Use **http://localhost:5173** in dev
 
 Throwaway public demo (fake data, 30-minute wipe): **[LIVE DEMO](https://demo.vaultboxoss.com)**. Do not enter real secrets.
 
-Project site (static): [site/index.html](site/index.html). After GitHub Pages is on: https://ty-haller.github.io/VaultBox/
+Project site: [https://vaultboxoss.com](https://vaultboxoss.com) (GitHub Pages, source in [site/](site/index.html)).
 
 ## Requirements
 
@@ -70,7 +70,7 @@ docker compose up --build -d
 
 **[LIVE DEMO](https://demo.vaultboxoss.com)** — a throwaway copy with fake seed data. It wipes every 30 minutes and drops visitor passkeys. Do not enter real secrets, seed phrases, or backup passwords.
 
-On the login page: **Start demo admin session** (Full Admin, no passkey) or **Register a passkey** (Viewer). Hostname, SSO/OAuth, and backups stay visible in Admin but cannot be changed. Email and Apprise are not sent.
+On the login page: **Start demo admin session** (Full Admin, no passkey) or **Register a passkey** (Viewer). Hostname, SSO/OAuth, backups, and file uploads stay visible but cannot be changed. Email and Apprise are not sent.
 
 VaultBox remains local-first software you run yourself. The public demo is a disposable instance for clicking around; it is not a hosted product.
 

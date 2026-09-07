@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { ImagePlus, Star, Trash2 } from 'lucide-react'
 import type { Photo } from '../../types'
+import { useDemo } from '../../context/DemoContext'
 import { api } from '../../lib/api'
 import { Card, CardHeader } from '../ui/Card'
 
@@ -13,11 +14,12 @@ interface PhotoGalleryProps {
 }
 
 export function PhotoGallery({ photos, holdingId, vaultId, siteId, onChange }: PhotoGalleryProps) {
+  const { publicDemo } = useDemo()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
 
   const upload = async (files: FileList | null) => {
-    if (!files?.length) return
+    if (publicDemo || !files?.length) return
     setUploading(true)
     try {
       for (const file of Array.from(files)) {
@@ -50,7 +52,7 @@ export function PhotoGallery({ photos, holdingId, vaultId, siteId, onChange }: P
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            disabled={uploading}
+            disabled={uploading || publicDemo}
             className="inline-flex items-center gap-1.5 rounded-md border border-vault-200 px-3 py-1.5 text-xs font-medium text-vault-600 hover:bg-vault-50 disabled:opacity-50"
           >
             <ImagePlus className="h-3.5 w-3.5" />
@@ -58,12 +60,17 @@ export function PhotoGallery({ photos, holdingId, vaultId, siteId, onChange }: P
           </button>
         }
       />
-      <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => upload(e.target.files)} />
+      {publicDemo && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          Public demo locks file uploads. This instance is wiped on a timer and must not store visitor files.
+        </div>
+      )}
+      <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" disabled={publicDemo} onChange={(e) => upload(e.target.files)} />
 
       {photos.length === 0 ? (
         <div
-          className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-vault-300 bg-vault-50 py-10 text-sm text-vault-500"
-          onClick={() => inputRef.current?.click()}
+          className={`flex flex-col items-center justify-center rounded-lg border border-dashed border-vault-300 bg-vault-50 py-10 text-sm text-vault-500 ${publicDemo ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+          onClick={() => { if (!publicDemo) inputRef.current?.click() }}
         >
           <ImagePlus className="mb-2 h-8 w-8 text-vault-400" />
           Click to upload photos

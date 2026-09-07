@@ -10,7 +10,7 @@ from administration.models import UserProfile
 from accounts.access import get_user_access
 from accounts.models import PasskeyCredential, UserGlobalRole, UserSiteRole, UserVaultRole, VaultBoxRole
 from accounts.scoping import can_write_inventory
-from inventory.models import Site, Vault
+from inventory.models import Holding, Site, Vault
 from public_demo.flags import enabled
 from public_demo.reset import reset_public_demo
 from public_demo.state import next_reset_at
@@ -94,6 +94,21 @@ class PublicDemoOnTests(TestCase):
         res = self.client.get('/api/admin/backups/')
         self.assertEqual(res.status_code, 200)
         res = self.client.post('/api/admin/backups/', {'includeMedia': False}, format='json')
+        self.assertEqual(res.status_code, 403)
+
+    def test_file_uploads_403(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        self.client.force_login(self.admin)
+        call_command('seed_data')
+        png = SimpleUploadedFile('x.png', b'\x89PNG\r\n\x1a\n', content_type='image/png')
+        res = self.client.post('/api/photos/', {'image': png, 'site': str(Site.objects.first().id)})
+        self.assertEqual(res.status_code, 403)
+        self.assertIn('File uploads are disabled', res.json()['detail'])
+        png2 = SimpleUploadedFile('y.png', b'\x89PNG\r\n\x1a\n', content_type='image/png')
+        res = self.client.post(
+            '/api/documents/',
+            {'file': png2, 'holding': str(Holding.objects.first().id), 'doc_type': 'other'},
+        )
         self.assertEqual(res.status_code, 403)
 
     def test_sso_patch_403(self):
