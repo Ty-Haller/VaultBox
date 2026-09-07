@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { FileText, Lock, Plus, Trash2, Upload } from 'lucide-react'
+import { useDemo } from '../context/DemoContext'
 import { useVault } from '../context/VaultContext'
 import { api } from '../lib/api'
 import type { Secret, SecretAttachment, SecretType } from '../types'
@@ -11,13 +12,16 @@ import { Badge } from '../components/ui/Badge'
 function SecretDocuments({
   attachments,
   onUpload,
+  locked,
 }: {
   attachments: SecretAttachment[]
   onUpload: (file: File) => Promise<void>
+  locked?: boolean
 }) {
   const [uploading, setUploading] = useState(false)
 
   const handleFile = async (file: File) => {
+    if (locked) return
     setUploading(true)
     try {
       await onUpload(file)
@@ -28,18 +32,23 @@ function SecretDocuments({
 
   return (
     <div className="mt-4 rounded-lg border border-vault-200 bg-vault-50/50 p-4">
+      {locked && (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          Public demo locks file uploads. This instance is wiped on a timer and must not store visitor files.
+        </div>
+      )}
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-vault-500" />
           <h4 className="text-sm font-semibold text-vault-800">Documents & Attachments</h4>
         </div>
-        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-vault-300 bg-white px-3 py-1.5 text-xs font-medium text-vault-700 hover:bg-vault-100">
+        <label className={`inline-flex items-center gap-1.5 rounded-md border border-vault-300 bg-white px-3 py-1.5 text-xs font-medium text-vault-700 ${locked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-vault-100'}`}>
           <Upload className="h-3.5 w-3.5" />
           {uploading ? 'Uploading…' : 'Upload File'}
           <input
             type="file"
             className="hidden"
-            disabled={uploading}
+            disabled={uploading || locked}
             onChange={(e) => {
               const file = e.target.files?.[0]
               if (file) handleFile(file)
@@ -78,6 +87,7 @@ function SecretDocuments({
 }
 
 export function Secrets() {
+  const { publicDemo } = useDemo()
   const { vaults, sites } = useVault()
   const [secrets, setSecrets] = useState<Secret[]>([])
   const [loading, setLoading] = useState(true)
@@ -118,7 +128,7 @@ export function Secrets() {
         content: form.content,
         notes: form.notes,
       })
-      if (attachFile) {
+      if (attachFile && !publicDemo) {
         await api.uploadSecretAttachment(created.id, attachFile)
       }
       setShowForm(false)
@@ -137,6 +147,7 @@ export function Secrets() {
   }
 
   const handleUpload = async (secretId: string, file: File) => {
+    if (publicDemo) return
     await api.uploadSecretAttachment(secretId, file)
     await load()
   }
@@ -208,10 +219,16 @@ export function Secrets() {
             </div>
 
             <div className="rounded-lg border border-dashed border-vault-300 bg-vault-50/80 p-4">
+              {publicDemo && (
+                <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                  Public demo locks file uploads. This instance is wiped on a timer and must not store visitor files.
+                </div>
+              )}
               <FormField label="Document Attachment">
                 <input
                   type="file"
                   className="text-sm text-vault-600"
+                  disabled={publicDemo}
                   onChange={(e) => setAttachFile(e.target.files?.[0] ?? null)}
                 />
                 <p className="mt-1 text-xs text-vault-400">
@@ -271,6 +288,7 @@ export function Secrets() {
 
                   <SecretDocuments
                     attachments={secret.attachments}
+                    locked={publicDemo}
                     onUpload={(file) => handleUpload(secret.id, file)}
                   />
                 </div>

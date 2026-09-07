@@ -5,9 +5,18 @@ from __future__ import annotations
 from vaultbox.host_env import env_bool
 
 
+UPLOADS_DISABLED = 'File uploads are disabled on the public demo.'
+
+
 def enabled() -> bool:
     from django.conf import settings
     return bool(getattr(settings, 'VAULTBOX_PUBLIC_DEMO', env_bool('VAULTBOX_PUBLIC_DEMO', False)))
+
+
+def deny_file_uploads() -> None:
+    from rest_framework.exceptions import PermissionDenied
+    if enabled():
+        raise PermissionDenied(UPLOADS_DISABLED)
 
 
 def reset_seconds() -> int:

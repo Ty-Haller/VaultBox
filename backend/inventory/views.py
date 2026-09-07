@@ -230,6 +230,11 @@ class PhotoViewSet(ScopedInventoryMixin, viewsets.ModelViewSet):
             qs = qs.filter(site_id=site_id)
         return qs
 
+    def create(self, request, *args, **kwargs):
+        from public_demo.flags import deny_file_uploads
+        deny_file_uploads()
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         photo = serializer.save()
         if photo.is_primary:
@@ -250,6 +255,11 @@ class DocumentViewSet(ScopedInventoryMixin, viewsets.ModelViewSet):
         if holding_id:
             qs = qs.filter(holding_id=holding_id)
         return qs
+
+    def create(self, request, *args, **kwargs):
+        from public_demo.flags import deny_file_uploads
+        deny_file_uploads()
+        return super().create(request, *args, **kwargs)
 
 
 class PortfolioHistoryView(ReportsMixin, APIView):
@@ -608,6 +618,8 @@ class SecretViewSet(ScopedInventoryMixin, viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser])
     def upload(self, request, id=None):
+        from public_demo.flags import deny_file_uploads
+        deny_file_uploads()
         secret = self.get_object()
         file = request.FILES.get('file')
         if not file:
