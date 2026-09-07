@@ -1,3 +1,5 @@
+import logging
+
 from django.http import FileResponse
 from rest_framework import status
 from rest_framework.response import Response
@@ -16,6 +18,8 @@ from .backup_service import (
 )
 from .models import BackupRecord
 from .serializers import BackupRecordSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class BackupListCreateView(AdminWriteMixin, APIView):
@@ -41,8 +45,9 @@ class BackupListCreateView(AdminWriteMixin, APIView):
             return Response(BackupRecordSerializer(record).data, status=status.HTTP_201_CREATED)
         except ValueError as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception:
+            logger.exception('Backup create failed')
+            return Response({'error': 'Backup failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class BackupDetailView(AdminWriteMixin, APIView):
@@ -78,8 +83,9 @@ class BackupRestoreView(AdminWriteMixin, APIView):
             })
         except ValueError as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception:
+            logger.exception('Backup restore failed')
+            return Response({'error': 'Restore failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class BackupUploadRestoreView(AdminWriteMixin, APIView):
@@ -103,8 +109,9 @@ class BackupUploadRestoreView(AdminWriteMixin, APIView):
             })
         except ValueError as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception:
+            logger.exception('Uploaded backup restore failed')
+            return Response({'error': 'Restore failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class BackupScheduleView(AdminWriteMixin, APIView):
@@ -140,8 +147,8 @@ class BackupRcloneTestView(AdminWriteMixin, APIView):
         remote_id = request.data.get('remoteId')
         if not remote_id:
             return Response({'error': 'remoteId required'}, status=status.HTTP_400_BAD_REQUEST)
-        ok, err = test_rclone_remote(remote_id)
-        return Response({'ok': ok, 'error': err})
+        ok, _err = test_rclone_remote(remote_id)
+        return Response({'ok': ok, 'error': None if ok else 'rclone test failed'})
 
 
 class BackupStorageInfoView(AdminWriteMixin, APIView):

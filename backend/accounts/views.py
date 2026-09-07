@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.middleware.csrf import get_token
@@ -15,8 +17,10 @@ from .authentication import CsrfExemptSessionAuthentication
 from .models import ApiToken, OAuthState, PasskeyCredential, UserGlobalRole, UserSiteRole, UserVaultRole, VaultBoxRole
 from .oauth_service import (
     complete_oauth_flow,
+    frontend_redirect,
     get_providers,
     list_user_oauth_identities,
+    safe_post_login_path,
     start_oauth_flow,
     unlink_oauth_identity,
 )
@@ -30,6 +34,8 @@ from .serializers import (
     UserVaultRoleSerializer,
 )
 from . import webauthn_service
+
+logger = logging.getLogger(__name__)
 
 
 class AuthMeView(APIView):
@@ -84,8 +90,9 @@ class PasskeyLoginFinishView(APIView):
             return Response({'error': 'Credential required'}, status=400)
         try:
             user = webauthn_service.verify_authentication(request, credential)
-        except Exception as exc:
-            return Response({'error': str(exc)}, status=400)
+        except Exception:
+            logger.exception('Passkey authentication failed')
+            return Response({'error': 'Passkey verification failed'}, status=400)
         login(request, user)
         return Response({'ok': True, 'username': user.username})
 
@@ -110,8 +117,9 @@ class PasskeyRegisterFinishView(APIView):
             return Response({'error': 'Credential required'}, status=400)
         try:
             pk = webauthn_service.verify_registration(request, request.user, credential, name)
-        except Exception as exc:
-            return Response({'error': str(exc)}, status=400)
+        except Exception:
+            logger.exception('Passkey registration failed')
+            return Response({'error': 'Passkey verification failed'}, status=400)
         from administration.notification_hooks import notify_passkey_added
         notify_passkey_added(request.user, name)
         return Response(PasskeySerializer(pk).data, status=201)
@@ -171,8 +179,9 @@ class BootstrapPasskeyFinishView(APIView):
             profile.is_admin = True
             profile.save(update_fields=['is_admin'])
             login(request, user)
-        except Exception as exc:
-            return Response({'error': str(exc)}, status=400)
+        except Exception:
+            logger.exception('Admin passkey bootstrap failed')
+            return Response({'error': 'Passkey verification failed'}, status=400)
         return Response({'ok': True, 'username': user.username})
 
 
@@ -244,9 +253,6 @@ class OAuthCallbackView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, provider):
-        from django.conf import settings
-        from urllib.parse import quote
-
         code = request.query_params.get('code')
         state = request.query_params.get('state')
         if not code or not state:
@@ -254,32 +260,33 @@ class OAuthCallbackView(APIView):
 
         oauth_state = OAuthState.objects.filter(state=state, provider=provider).first()
         is_link = bool(oauth_state and oauth_state.link_user_id)
-        fallback_path = oauth_state.redirect_after if oauth_state and oauth_state.redirect_after else '/settings'
-        from administration.site_config import get_frontend_base_url
-        base = get_frontend_base_url(request).rstrip('/')
+        fallback_path = safe_post_login_path(
+            oauth_state.redirect_after if oauth_state else None,
+            fallback='/settings',
+        )
 
         try:
             result = complete_oauth_flow(provider, code, state, request)
-        except Exception as exc:
+        except Exception:
+            logger.exception('OAuth callback failed for provider %s', provider)
             if is_link:
-                path = fallback_path if fallback_path.startswith('/') else f'/{fallback_path}'
-                sep = '&' if '?' in path else '?'
-                return redirect(f'{base}{path}{sep}oauth_error={quote(str(exc))}')
-            return redirect(f'{base}/login?oauth_error={quote(str(exc))}')
+                sep = '&' if '?' in fallback_path else '?'
+                return frontend_redirect(request, f'{fallback_path}{sep}oauth_error=1')
+            return frontend_redirect(request, '/login?oauth_error=1')
 
-        path = result.redirect_after if result.redirect_after.startswith('/') else f'/{result.redirect_after}'
+        path = safe_post_login_path(result.redirect_after, fallback='/settings' if is_link else '/')
         if result.mode == 'link':
             sep = '&' if '?' in path else '?'
-            return redirect(f'{base}{path}{sep}oauth_linked=1')
+            return frontend_redirect(request, f'{path}{sep}oauth_linked=1')
 
         if result.mode == 'pending':
-            return redirect(f'{base}/login?sso_pending=1')
+            return frontend_redirect(request, '/login?sso_pending=1')
 
         if not result.user or not result.user.is_active:
-            return redirect(f'{base}/login?sso_pending=1')
+            return frontend_redirect(request, '/login?sso_pending=1')
 
         login(request, result.user)
-        return redirect(base + path)
+        return frontend_redirect(request, path)
 
 
 class PasskeyViewSet(viewsets.ModelViewSet):

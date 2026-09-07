@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -24,6 +26,8 @@ from .rbac_serializers import (
 )
 from .models import UserGroup
 from . import webauthn_service
+
+logger = logging.getLogger(__name__)
 
 
 class PermissionCatalogView(APIView):
@@ -235,8 +239,9 @@ class SetupPasskeyFinishView(APIView):
             return Response({'error': 'Invalid or expired token'}, status=400)
         try:
             webauthn_service.verify_registration(request, token.user, credential, name)
-        except Exception as exc:
-            return Response({'error': str(exc)}, status=400)
+        except Exception:
+            logger.exception('Setup-token passkey registration failed')
+            return Response({'error': 'Passkey verification failed'}, status=400)
         token.used_at = timezone.now()
         token.save(update_fields=['used_at'])
         request.session.pop('setup_token_hash', None)

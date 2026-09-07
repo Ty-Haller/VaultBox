@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
 from typing import Any
+from urllib.parse import urlparse
 
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -22,6 +24,15 @@ from .models import (
     UserProfile,
 )
 from .role_notification_baseline import ALL_EVENT_TYPES, baseline_allowed_events
+
+logger = logging.getLogger(__name__)
+
+_CLOUD_METADATA_HOSTS = frozenset({
+    '169.254.169.254',
+    'metadata.google.internal',
+    'metadata.google.com',
+    'fd00:ec2::254',
+})
 
 
 @dataclass
@@ -234,10 +245,25 @@ def _mask_apprise_url(url: str) -> str:
     return raw
 
 
+def _is_cloud_metadata_url(url: str) -> bool:
+    parsed = urlparse(url)
+    host = (parsed.hostname or '').lower().rstrip('.')
+    if host.startswith('[') and host.endswith(']'):
+        host = host[1:-1]
+    if not host and '://' in url:
+        rest = url.split('://', 1)[1]
+        host = (urlparse(f'http://{rest}').hostname or '').lower().rstrip('.')
+        if host.startswith('[') and host.endswith(']'):
+            host = host[1:-1]
+    return host in _CLOUD_METADATA_HOSTS or host.endswith('.169.254.169.254')
+
+
 def _deliver_apprise_url(url: str, title: str, body: str) -> tuple[bool, str | None]:
     cleaned = (url or '').strip()
     if not cleaned:
         return False, 'Empty URL'
+    if _is_cloud_metadata_url(cleaned):
+        return False, 'This URL is not allowed.'
     try:
         import apprise
     except ImportError:
@@ -261,8 +287,9 @@ def _deliver_apprise_url(url: str, title: str, body: str) -> tuple[bool, str | N
                 return True, None
             return False, f'HTTP {res.status_code}'
         return False, 'Apprise library not installed — only https:// URLs can be tested.'
-    except Exception as exc:
-        return False, str(exc) or 'Delivery failed'
+    except Exception:
+        logger.exception('Apprise delivery failed')
+        return False, 'Delivery failed'
 
 
 def _channel_result(*, skipped: bool = False, ok: bool = False, error: str | None = None, detail: str | None = None) -> dict:
@@ -305,8 +332,9 @@ def test_user_notifications(
                 dedupe_key=f'test:{user.pk}:{timezone.now().timestamp()}',
             )
             out['inApp'] = _channel_result(ok=True, detail='Added to your notification inbox.')
-        except Exception as exc:
-            out['inApp'] = _channel_result(error=str(exc) or 'Failed to create in-app notification.')
+        except Exception:
+            logger.exception('In-app test notification failed')
+            out['inApp'] = _channel_result(error='Failed to create in-app notification.')
 
     if 'email' in selected:
         if not user.email:
