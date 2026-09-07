@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VaultBox — Hard Asset Inventory</title>
+  <meta name="description" content="Local-first inventory for bullion, crypto, and vaulted goods. You run it. Passkeys, SQLite, Docker or Podman. Not a public cloud service.">
+  <meta property="og:title" content="VaultBox — Hard Asset Inventory">
+  <meta property="og:description" content="Local-first inventory for bullion, crypto, and vaulted goods. You run it on your machine.">
+  <meta property="og:image" content="brand/og.png">
+  <link rel="canonical" href="https://vaultboxoss.com/">
+  <link rel="icon" href="brand/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@450;550;650;750&family=JetBrains+Mono:wght@450&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#start">Skip to get started</a>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="#top">
+        <img src="brand/logo.svg" alt="">
+        <span>VaultBox<small>Hard asset inventory</small></span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a class="nav-live" href="https://demo.vaultboxoss.com">LIVE DEMO</a>
+        <a class="hide-sm" href="#shots">Screenshots</a>
+        <a class="hide-sm" href="#start">Get started</a>
+        <a href="#support">Support</a>
+        <a href="https://github.com/Ty-Haller/VaultBox">GitHub</a>
+        <a href="https://x.com/hallert">X</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="wrap hero">
+      <div>
+        <p class="kicker">Open source · local-first</p>
+        <h1>Hard asset inventory you run yourself.</h1>
+        <p class="lede">
+          Track bullion, crypto, and other vaulted goods with passkeys, live prices, audits, and QR labels.
+          Data stays in SQLite on your machine. VaultBox is not a public internet service.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-gold" href="https://demo.vaultboxoss.com">LIVE DEMO</a>
+          <a class="btn btn-ghost" href="#start">Get started</a>
+          <a class="btn btn-ghost" href="https://github.com/Ty-Haller/VaultBox">View on GitHub</a>
+        </div>
+      </div>
+      <div class="shot-frame" aria-hidden="false">
+        <div class="shot-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+        <img src="img/dashboard.png" alt="VaultBox dashboard with portfolio totals, a value chart, and metal allocation">
+      </div>
+    </div>
+
+    <section class="wrap" id="why">
+      <h2>Built to stay on your network</h2>
+      <p class="section-lead">
+        Sign in with passkeys. Inventory lives in sites, vaults, and holdings. You keep the database,
+        the encryption key, and the backups. Nothing here is a hosted product.
+      </p>
+      <div class="features">
+        <article class="card">
+          <h3>Passkeys, not passwords</h3>
+          <p>WebAuthn is the sign-in method. Open the app at localhost (or your chosen hostname).</p>
+        </article>
+        <article class="card">
+          <h3>Bullion and more</h3>
+          <p>Holdings, live metal and ticker prices, vault audits, PDF reports, QR labels, and encrypted secrets.</p>
+        </article>
+        <article class="card">
+          <h3>One container</h3>
+          <p>Docker or Podman: UI, API, and SQLite in a single image. Optional Caddy for HTTPS on the LAN.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="wrap" id="shots">
+      <h2>Screenshots</h2>
+      <div class="gallery">
+        <figure>
+          <img src="img/login.png" alt="Passkey sign-in screen with the VaultBox strongbox mark">
+          <figcaption>Login — register an admin passkey on a fresh database.</figcaption>
+        </figure>
+        <figure>
+          <img src="img/dashboard.png" alt="Dashboard with portfolio value and metal allocation">
+          <figcaption>Dashboard — portfolio totals, charts, and the live ticker.</figcaption>
+        </figure>
+        <figure>
+          <img src="img/inventory.png" alt="Inventory table of bullion holdings">
+          <figcaption>Inventory — holdings with filters and CSV export.</figcaption>
+        </figure>
+        <figure>
+          <img src="img/vault.png" alt="Vault detail with audit status and capacity">
+          <figcaption>Vault — audit status, utilization, and holdings in one place.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="wrap" id="demo">
+      <h2>Public demo</h2>
+      <p class="section-lead">
+        A throwaway copy with fake seed data. It wipes every 30 minutes.
+        Do not enter real secrets, seed phrases, or backup passwords.
+        VaultBox is still local-first software you run yourself — this is not a hosted product.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-gold" href="https://demo.vaultboxoss.com">LIVE DEMO</a>
+      </div>
+      <div class="features demo-notes">
+        <article class="card">
+          <h3>Two ways in</h3>
+          <p>Start a demo admin session (Full Admin, no passkey) or register a passkey as Viewer.</p>
+        </article>
+        <article class="card">
+          <h3>Locked admin surfaces</h3>
+          <p>Hostname, SSO/OAuth, backups, and file uploads stay on screen but cannot be changed. Mail and Apprise are off.</p>
+        </article>
+        <article class="card">
+          <h3>Timed wipe</h3>
+          <p>Every 30 minutes the seed restores and visitor passkeys die. Treat it as disposable.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="wrap" id="start">
+      <h2>Quick get started</h2>
+      <p class="section-lead">
+        Docker Engine or Podman. After bootstrap, open <strong>http://localhost:8000</strong> (not 127.0.0.1)
+        and register the admin passkey. Podman and HTTPS notes are in the
+        <a href="https://github.com/Ty-Haller/VaultBox#docker-vs-podman">README</a>.
+      </p>
+      <div class="commands">
+        <figure class="cmd">
+          <div class="cmd-bar">
+            <span>Clone and bootstrap</span>
+            <button type="button" class="copy" data-copy>Copy</button>
+          </div>
+          <pre><code>git clone https://github.com/Ty-Haller/VaultBox.git
+cd VaultBox
+chmod +x scripts/bootstrap.sh
+./scripts/bootstrap.sh</code></pre>
+        </figure>
+        <figure class="cmd">
+          <div class="cmd-bar">
+            <span>Compose (HTTP)</span>
+            <button type="button" class="copy" data-copy>Copy</button>
+          </div>
+          <pre><code>cp .env.example .env
+docker compose up --build -d</code></pre>
+        </figure>
+      </div>
+    </section>
+
+    <section class="wrap" id="stack">
+      <h2>Tech stack</h2>
+      <div class="stack">
+        <a href="https://react.dev"><img src="brand/mdi/react.svg" alt=""> React</a>
+        <a href="https://www.typescriptlang.org"><img src="brand/mdi/language-typescript.svg" alt=""> TypeScript</a>
+        <a href="https://vite.dev"><img src="brand/mdi/lightning-bolt.svg" alt=""> Vite</a>
+        <a href="https://tailwindcss.com"><img src="brand/mdi/tailwind.svg" alt=""> Tailwind CSS</a>
+        <a href="https://www.djangoproject.com"><img src="brand/mdi/web.svg" alt=""> Django</a>
+        <a href="https://www.sqlite.org"><img src="brand/mdi/database.svg" alt=""> SQLite</a>
+        <a href="https://www.docker.com"><img src="brand/mdi/docker.svg" alt=""> Docker</a>
+      </div>
+    </section>
+
+    <section class="wrap" id="support">
+      <h2>Support the project</h2>
+      <div class="support-row">
+        <a class="btn btn-gold" href="https://github.com/sponsors/Ty-Haller">GitHub Sponsors</a>
+        <a class="btn btn-ghost" id="btn-bmc" href="https://www.buymeacoffee.com/tyhaller">Buy Me a Coffee</a>
+        <a class="btn btn-ghost" id="btn-paypal" href="https://paypal.me/hallerty">PayPal</a>
+        <a class="btn btn-ghost" href="https://github.com/Ty-Haller/VaultBox">Star on GitHub</a>
+      </div>
+      <p class="note">This is donation-funded software, not a hosted billing product.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <p>© 2026 Ty Haller · <a href="https://github.com/Ty-Haller/VaultBox/blob/main/LICENSE">Apache License 2.0</a></p>
+      <nav>
+        <a href="https://demo.vaultboxoss.com">LIVE DEMO</a>
+        <a href="https://github.com/Ty-Haller/VaultBox">GitHub</a>
+        <a href="https://x.com/hallert">X</a>
+        <a href="https://github.com/Ty-Haller/VaultBox/blob/main/SECURITY.md">Security</a>
+        <a href="https://github.com/Ty-Haller/VaultBox/blob/main/README.md">README</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    document.querySelectorAll("[data-copy]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var figure = btn.closest("figure");
+        var code = figure && figure.querySelector("code");
+        if (!code) return;
+        var text = code.textContent;
+        function done() {
+          btn.textContent = "Copied";
+          btn.classList.add("copied");
+          setTimeout(function () {
+            btn.textContent = "Copy";
+            btn.classList.remove("copied");
+          }, 1600);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done).catch(function () {
+            fallbackCopy(text, done);
+          });
+        } else {
+          fallbackCopy(text, done);
+        }
+      });
+    });
+
+    function fallbackCopy(text, done) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+
+    fetch("support.json")
+      .then(function (r) { return r.json(); })
+      .then(function (cfg) {
+        function show(id, url) {
+          var el = document.getElementById(id);
+          if (el && url) {
+            el.href = url;
+            el.hidden = false;
+          }
+        }
+        show("btn-bmc", (cfg.buyMeACoffee || "").trim());
+        show("btn-paypal", (cfg.paypal || "").trim());
+      })
+      .catch(function () {});
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="VaultBox">
+  <rect width="64" height="64" rx="14" fill="#111b24"/>
+  <!-- Strongbox body -->
+  <rect x="11" y="14" width="42" height="38" rx="5" fill="#1a2836" stroke="#e8b923" stroke-width="2.25"/>
+  <!-- Top lid seam -->
+  <path d="M13 24h38" stroke="#e8b923" stroke-width="1.5" stroke-linecap="round" opacity="0.85"/>
+  <!-- Corner rivets -->
+  <circle cx="17.5" cy="19.5" r="1.4" fill="#e8b923"/>
+  <circle cx="46.5" cy="19.5" r="1.4" fill="#e8b923"/>
+  <circle cx="17.5" cy="46.5" r="1.4" fill="#e8b923"/>
+  <circle cx="46.5" cy="46.5" r="1.4" fill="#e8b923"/>
+  <!-- Combination dial -->
+  <circle cx="32" cy="37" r="9.5" fill="#111b24" stroke="#e8b923" stroke-width="2"/>
+  <circle cx="32" cy="37" r="5.25" fill="none" stroke="#d4a017" stroke-width="1.25"/>
+  <circle cx="32" cy="37" r="2.1" fill="#e8b923"/>
+  <path d="M32 28.8v2.4M32 42.8v2.4M23.8 37h2.4M37.8 37h2.4" stroke="#e8b923" stroke-width="1.35" stroke-linecap="round"/>
+</svg>
