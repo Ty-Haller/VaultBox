@@ -1,0 +1,33 @@
+name: Feature request
+description: A change or addition you want in VaultBox.
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        VaultBox stays on the operator's machine. It is not a public internet service. Feature ideas that need a hosted backend or a vendor cloud are likely out of scope.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is missing
+      description: What you cannot do today, or what is awkward.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: A concrete shape is more useful than a product slogan.
+    validations:
+      required: true
+  - type: dropdown
+    id: local-first
+    attributes:
+      label: Does this stay local-first?
+      options:
+        - Yes — data and secrets stay on the operator's machine
+        - Unsure
+        - No — it would need a hosted service
+    validations:
+      required: true

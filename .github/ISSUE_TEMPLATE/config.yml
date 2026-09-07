@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a vulnerability
+    url: https://github.com/Ty-Haller/VaultBox/security/advisories/new
+    about: Private report. Do not file a public issue with exploit details.
+  - name: Project site
+    url: https://vaultboxoss.com
+    about: Install and product overview.
