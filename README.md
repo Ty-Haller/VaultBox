@@ -259,7 +259,8 @@ Also: Django REST Framework, Recharts, React Router, Pillow, ReportLab, qrcode, 
 VaultBox is free, local-first software. If it is useful, you can fund development:
 
 - [GitHub Sponsors](https://github.com/sponsors/Ty-Haller)
-- Buy Me a Coffee and PayPal.Me — add those handles in [`site/support.json`](site/support.json) once the pages exist; the [project site](site/index.html) will show the buttons.
+- [Buy Me a Coffee](https://www.buymeacoffee.com/tyhaller)
+- PayPal.Me — add the link in [`site/support.json`](site/support.json) once you have a `paypal.me/…` URL; the [project site](site/index.html) will show the button.
 
 ## License
 
