@@ -36,6 +36,7 @@ venv/
 # Local Grok launcher (not part of the app)
 .grok/
 AGENTS.md
+PROJECT_HANDOFF.md
 
 # Editor directories and files
 .vscode/*
