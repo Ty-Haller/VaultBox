@@ -22,6 +22,12 @@ from .serializers import BackupRecordSerializer
 
 logger = logging.getLogger(__name__)
 
+
+def _rejected(log_message: str, exc: Exception, public_error: str) -> Response:
+    logger.warning('%s: %s', log_message, exc)
+    return Response({'error': public_error}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class DemoBackupsDisabledMixin:
     def initial(self, request, *args, **kwargs):
         from public_demo.flags import enabled as public_demo_enabled
@@ -52,7 +58,7 @@ class BackupListCreateView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
             )
             return Response(BackupRecordSerializer(record).data, status=status.HTTP_201_CREATED)
         except ValueError as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            return _rejected('Backup create rejected', exc, 'Backup request was rejected')
         except Exception:
             logger.exception('Backup create failed')
             return Response({'error': 'Backup failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -90,7 +96,7 @@ class BackupRestoreView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
                 'message': 'Restore complete. Restart the VaultBox server to reload the database.',
             })
         except ValueError as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            return _rejected('Backup restore rejected', exc, 'Restore request was rejected')
         except Exception:
             logger.exception('Backup restore failed')
             return Response({'error': 'Restore failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -116,7 +122,7 @@ class BackupUploadRestoreView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView
                 'message': 'Restore complete. Restart the VaultBox server to reload the database.',
             })
         except ValueError as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            return _rejected('Uploaded backup restore rejected', exc, 'Restore request was rejected')
         except Exception:
             logger.exception('Uploaded backup restore failed')
             return Response({'error': 'Restore failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -139,7 +145,7 @@ class BackupScheduleView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
             data['hasEncryptionSecret'] = bool(get_backup_schedule_internal().get('encryptionSecret'))
             return Response(data)
         except ValueError as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            return _rejected('Backup schedule rejected', exc, 'Backup schedule was rejected')
 
 
 class BackupRcloneView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
