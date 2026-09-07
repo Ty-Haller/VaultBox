@@ -33,10 +33,14 @@ venv/
 .env.*
 !.env.example
 
-# Local Grok launcher (not part of the app)
+# Local agent / session notes (not part of the app)
 .grok/
 AGENTS.md
-PROJECT_HANDOFF.md
+CLAUDE.md
+GEMINI.md
+.claude/
+.cursor/
+*HANDOFF*
 
 # Editor directories and files
 .vscode/*
