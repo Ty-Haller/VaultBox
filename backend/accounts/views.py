@@ -17,6 +17,7 @@ from .authentication import CsrfExemptSessionAuthentication
 from .models import ApiToken, OAuthState, PasskeyCredential, UserGlobalRole, UserSiteRole, UserVaultRole, VaultBoxRole
 from .oauth_service import (
     complete_oauth_flow,
+    frontend_redirect,
     get_providers,
     list_user_oauth_identities,
     safe_post_login_path,
@@ -263,8 +264,6 @@ class OAuthCallbackView(APIView):
             oauth_state.redirect_after if oauth_state else None,
             fallback='/settings',
         )
-        from administration.site_config import get_frontend_base_url
-        base = get_frontend_base_url(request).rstrip('/')
 
         try:
             result = complete_oauth_flow(provider, code, state, request)
@@ -272,22 +271,22 @@ class OAuthCallbackView(APIView):
             logger.exception('OAuth callback failed for provider %s', provider)
             if is_link:
                 sep = '&' if '?' in fallback_path else '?'
-                return redirect(f'{base}{fallback_path}{sep}oauth_error=1')
-            return redirect(f'{base}/login?oauth_error=1')
+                return frontend_redirect(request, f'{fallback_path}{sep}oauth_error=1')
+            return frontend_redirect(request, '/login?oauth_error=1')
 
         path = safe_post_login_path(result.redirect_after, fallback='/settings' if is_link else '/')
         if result.mode == 'link':
             sep = '&' if '?' in path else '?'
-            return redirect(f'{base}{path}{sep}oauth_linked=1')
+            return frontend_redirect(request, f'{path}{sep}oauth_linked=1')
 
         if result.mode == 'pending':
-            return redirect(f'{base}/login?sso_pending=1')
+            return frontend_redirect(request, '/login?sso_pending=1')
 
         if not result.user or not result.user.is_active:
-            return redirect(f'{base}/login?sso_pending=1')
+            return frontend_redirect(request, '/login?sso_pending=1')
 
         login(request, result.user)
-        return redirect(base + path)
+        return frontend_redirect(request, path)
 
 
 class PasskeyViewSet(viewsets.ModelViewSet):

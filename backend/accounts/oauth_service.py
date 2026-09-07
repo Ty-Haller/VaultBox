@@ -10,6 +10,8 @@ from authlib.integrations.requests_client import OAuth2Session
 from authlib.oauth2.rfc7636 import create_s256_code_challenge
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.http import HttpResponseRedirect
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.text import slugify
 
 from administration.models import UserProfile
@@ -70,6 +72,43 @@ def safe_post_login_path(value: str | None, *, fallback: str = '/') -> str:
     if parsed.scheme or parsed.netloc:
         return fallback
     return raw
+
+
+def _allowed_redirect_hosts() -> set[str]:
+    """Host[:port] values url_has_allowed_host_and_scheme will accept.
+
+    Django matches the full netloc, so localhost:5173 is not covered by
+    ALLOWED_HOSTS entry ``localhost`` alone.
+    """
+    from vaultbox.host_env import env_public_port
+
+    ports = {80, 443, 5173, 8000}
+    public_port = env_public_port()
+    if public_port:
+        ports.add(public_port)
+    allowed: set[str] = set()
+    for host in settings.ALLOWED_HOSTS:
+        if not host or host == '*':
+            continue
+        allowed.add(host)
+        for port in ports:
+            allowed.add(f'{host}:{port}')
+    return allowed
+
+
+def frontend_redirect(request, path: str) -> HttpResponseRedirect:
+    """302 to the VaultBox UI. `path` must already be a relative same-origin path."""
+    from administration.site_config import get_frontend_base_url
+
+    path = safe_post_login_path(path).replace('\\', '')
+    parsed = urlparse(path)
+    if parsed.scheme or parsed.netloc:
+        path = '/'
+
+    target = get_frontend_base_url(request).rstrip('/') + path
+    if url_has_allowed_host_and_scheme(target, allowed_hosts=_allowed_redirect_hosts()):
+        return HttpResponseRedirect(target)
+    return HttpResponseRedirect(path)
 
 
 def start_oauth_flow(
