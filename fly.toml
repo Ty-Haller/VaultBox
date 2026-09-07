@@ -1,5 +1,10 @@
 # Public demo on Fly.io (https://demo.vaultboxoss.com).
 # Local-first installs do not use this file. Secrets stay on the /data volume.
+#
+# Platform metrics are on by default (no [metrics] scrape needed):
+#   Grafana: https://fly-metrics.net
+#   Prometheus: https://api.fly.io/prometheus/personal/
+# Add [metrics] only if the app itself exposes a Prometheus /metrics endpoint.
 
 app = "vaultbox-demo"
 primary_region = "iad"
