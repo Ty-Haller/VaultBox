@@ -260,7 +260,9 @@ VaultBox is free, local-first software. If it is useful, you can fund developmen
 
 - [GitHub Sponsors](https://github.com/sponsors/Ty-Haller)
 - [Buy Me a Coffee](https://www.buymeacoffee.com/tyhaller)
-- PayPal.Me — add the link in [`site/support.json`](site/support.json) once you have a `paypal.me/…` URL; the [project site](site/index.html) will show the button.
+- [PayPal.Me](https://paypal.me/hallerty)
+
+News and chat: [X / @hallert](https://x.com/hallert)
 
 ## License
 
