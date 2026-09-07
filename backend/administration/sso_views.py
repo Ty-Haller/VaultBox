@@ -10,4 +10,10 @@ class SsoConfigView(AdminWriteMixin, APIView):
         return Response(get_sso_config(request))
 
     def patch(self, request):
+        from public_demo.flags import enabled as public_demo_enabled
+        if public_demo_enabled():
+            return Response(
+                {'error': 'SSO / OAuth cannot be changed on the public demo.'},
+                status=403,
+            )
         return Response(save_sso_config(request.data, request))

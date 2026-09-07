@@ -63,6 +63,29 @@ docker compose up --build -d
 # or: podman compose up --build -d
 ```
 
+## Public demo mode
+
+Optional, **off by default**. Use it only for a shared throwaway instance with fake data — never against a real holdings database.
+
+Set `VAULTBOX_PUBLIC_DEMO=1` and point `VAULTBOX_DATA_DIR` / `VAULTBOX_ENV_FILE` at an isolated directory (see [`.env.example`](.env.example)). Timed wipe interval is `VAULTBOX_DEMO_RESET_SECONDS` (default 1800).
+
+Local helper (Vite + Django, isolated `backend/demo-data/`):
+
+```bash
+./scripts/public-demo-local.sh start
+# App: http://localhost:5173  (not 127.0.0.1)
+./scripts/public-demo-local.sh stop
+```
+
+When the flag is on:
+
+- Banner and countdown on every page; wipe restores the demo seed and drops visitor passkeys
+- Login offers **Start demo admin session** (Full Admin, no passkey) and **Register a passkey** (Viewer)
+- Hostname, SSO/OAuth, and backups stay visible in Admin but cannot be changed
+- Email and Apprise are not sent
+
+VaultBox remains local-first software you run yourself. Demo mode is how a maintainer can put a disposable copy on the internet; it is not a hosted product.
+
 ## HTTPS (Caddy)
 
 Caddy sits in front of VaultBox, terminates TLS, and forwards to the app. Set `VAULTBOX_HOSTNAME` to the name in the browser (that is also the WebAuthn RP ID). After a hostname change, register a new admin passkey at the new App URL.

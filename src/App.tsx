@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { DemoProvider } from './context/DemoContext'
 import { VaultProvider } from './context/VaultContext'
 import { PricesProvider } from './context/PricesContext'
 import { AdminProvider } from './context/AdminContext'
@@ -70,7 +71,8 @@ function AppProviders() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <DemoProvider>
+        <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
@@ -131,7 +133,8 @@ export default function App() {
             </Route>
           </Route>
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </DemoProvider>
     </AuthProvider>
   )
 }

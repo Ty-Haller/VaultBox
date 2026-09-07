@@ -4,8 +4,11 @@ import { UserPlus } from 'lucide-react'
 import { LogoMark } from '../components/brand/LogoMark'
 import { authApi } from '../lib/authApi'
 import { FormField, inputClass } from '../components/ui/FormField'
+import { DemoBanner } from '../components/layout/DemoBanner'
+import { useDemo } from '../context/DemoContext'
 
 export function SignupPage() {
+  const { publicDemo } = useDemo()
   const [form, setForm] = useState({ username: '', email: '', displayName: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +28,9 @@ export function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-vault-50 px-4 dark:bg-vault-950">
+    <div className="flex min-h-screen flex-col bg-vault-50 dark:bg-vault-950">
+      <DemoBanner />
+      <div className="flex flex-1 items-center justify-center px-4 py-8">
       <div className="w-full max-w-md rounded-xl border border-vault-200 bg-white p-8 shadow-lg dark:border-vault-700 dark:bg-vault-900">
         <div className="mb-6 flex flex-col items-center gap-2">
           <LogoMark className="h-14 w-14 rounded-xl" />
@@ -38,7 +43,15 @@ export function SignupPage() {
           </p>
         </div>
 
-        {submitted ? (
+        {publicDemo ? (
+          <div className="space-y-3 text-center text-sm text-vault-600 dark:text-vault-300">
+            <p>This public demo does not take account requests.</p>
+            <p>
+              Use <Link to="/login" className="text-gold-500 hover:underline">login</Link>
+              {' '}to start a demo admin session or register a passkey (Viewer).
+            </p>
+          </div>
+        ) : submitted ? (
           <div className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-800 dark:bg-green-950 dark:text-green-200">
             Request submitted. An administrator will review your account request.
           </div>
@@ -80,9 +93,12 @@ export function SignupPage() {
 
         {error && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
+        {!publicDemo && (
         <p className="mt-6 text-center text-sm text-vault-600 dark:text-vault-400">
           Already have a passkey? <Link to="/login" className="text-gold-500 hover:underline">Sign in</Link>
         </p>
+        )}
+      </div>
       </div>
     </div>
   )

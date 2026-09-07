@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui/Badge'
 import { Card, CardHeader } from '../../components/ui/Card'
 import { adminApi } from '../../lib/adminApi'
 import type { SsoConfig, SsoProvider, SsoProviderDraft } from '../../types/sso'
+import { useDemo } from '../../context/DemoContext'
 
 function toDraft(p: SsoProvider): SsoProviderDraft {
   return {
@@ -24,6 +25,7 @@ function toDraft(p: SsoProvider): SsoProviderDraft {
 }
 
 export function SsoSettingsPage() {
+  const { publicDemo } = useDemo()
   const [config, setConfig] = useState<SsoConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -47,6 +49,7 @@ export function SsoSettingsPage() {
   useEffect(() => { load() }, [load])
 
   const saveProviders = async (providers: SsoProviderDraft[]) => {
+    if (publicDemo) return
     setSaving(true)
     setError(null)
     setSuccess(null)
@@ -94,6 +97,12 @@ export function SsoSettingsPage() {
         </div>
       </div>
 
+      {publicDemo && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          Public demo locks SSO / OAuth. Visitors use the demo admin session or a passkey; adding identity providers would affect everyone on this shared box.
+        </div>
+      )}
+
       {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       {success && <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{success}</p>}
 
@@ -119,7 +128,8 @@ export function SsoSettingsPage() {
             <button
               type="button"
               onClick={() => { setEditing(null); setModalOpen(true) }}
-              className="flex items-center gap-1.5 rounded-md border border-vault-200 px-3 py-1.5 text-sm hover:bg-vault-50"
+              disabled={publicDemo}
+              className="flex items-center gap-1.5 rounded-md border border-vault-200 px-3 py-1.5 text-sm hover:bg-vault-50 disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
               Add provider
@@ -160,7 +170,7 @@ export function SsoSettingsPage() {
                     <input
                       type="checkbox"
                       checked={provider.enabled}
-                      disabled={saving}
+                      disabled={saving || publicDemo}
                       onChange={(e) => toggleEnabled(provider.id, e.target.checked)}
                     />
                     Enabled
@@ -168,14 +178,15 @@ export function SsoSettingsPage() {
                   <button
                     type="button"
                     onClick={() => { setEditing(provider); setModalOpen(true) }}
-                    className="rounded-md border border-vault-200 px-3 py-1.5 text-xs hover:bg-vault-50"
+                    disabled={publicDemo}
+                    className="rounded-md border border-vault-200 px-3 py-1.5 text-xs hover:bg-vault-50 disabled:opacity-50"
                   >
                     Edit
                   </button>
                   <button
                     type="button"
                     onClick={() => removeProvider(provider.id)}
-                    disabled={saving}
+                    disabled={saving || publicDemo}
                     className="rounded-md border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
                   >
                     Remove

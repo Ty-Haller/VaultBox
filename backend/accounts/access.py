@@ -51,14 +51,14 @@ class UserAccess:
     def effective_site_role(self, site_id: str) -> str | None:
         if self.is_full_admin:
             return VaultBoxRole.FULL_ADMIN
-        return self.site_roles.get(str(site_id))
+        return self._best(self.global_role, self.site_roles.get(str(site_id)))
 
     def effective_vault_role(self, vault_id: str, site_id: str | None = None) -> str | None:
         if self.is_full_admin:
             return VaultBoxRole.FULL_ADMIN
         vault_role = self.vault_roles.get(str(vault_id))
         site_role = self.site_roles.get(str(site_id)) if site_id else None
-        return self._best(vault_role, site_role)
+        return self._best(self.global_role, vault_role, site_role)
 
     def accessible_site_ids(self) -> set[str] | None:
         if self.is_full_admin:

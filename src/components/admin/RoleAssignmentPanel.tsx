@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { authApi, type VaultBoxRole } from '../../lib/authApi'
 import { useVault } from '../../context/VaultContext'
@@ -16,13 +16,18 @@ interface Props {
   userId: number
 }
 
-export function RoleAssignmentPanel({ userId }: Props) {
+export interface RoleAssignmentHandle {
+  save: () => Promise<void>
+}
+
+export const RoleAssignmentPanel = forwardRef<RoleAssignmentHandle, Props>(function RoleAssignmentPanel({ userId }, ref) {
   const { sites, vaults } = useVault()
   const [globalRole, setGlobalRole] = useState<VaultBoxRole | ''>('')
   const [siteRoles, setSiteRoles] = useState<{ siteId: string; role: VaultBoxRole }[]>([])
   const [vaultRoles, setVaultRoles] = useState<{ vaultId: string; role: VaultBoxRole }[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [ok, setOk] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
@@ -34,28 +39,37 @@ export function RoleAssignmentPanel({ userId }: Props) {
     }).catch((e) => setError(e instanceof Error ? e.message : 'Failed to load roles'))
   }, [userId])
 
-  const save = async () => {
+  const save = useCallback(async () => {
+    if (!loaded) return
     setSaving(true)
     setError(null)
+    setOk(null)
     try {
       await authApi.updateRoleAssignment(userId, {
         globalRole: globalRole || null,
         siteRoles,
         vaultRoles,
       })
+      setOk('Roles saved. Sign in again as that user (or refresh) to pick up new permissions.')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Save failed')
+      const message = e instanceof Error ? e.message : 'Save failed'
+      setError(message)
+      throw e
     } finally {
       setSaving(false)
     }
-  }
+  }, [loaded, userId, globalRole, siteRoles, vaultRoles])
+
+  useImperativeHandle(ref, () => ({ save }), [save])
 
   if (!loaded) return <p className="text-sm text-vault-500">Loading roles…</p>
 
   return (
     <div className="space-y-4 rounded-lg border border-vault-200 p-4 dark:border-vault-600">
       <h3 className="text-sm font-semibold text-vault-900 dark:text-white">Role Assignments</h3>
+      <p className="text-xs text-vault-500">The user Save button below also stores these roles. A raised global role applies everywhere this user already has access.</p>
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {ok && <p className="text-sm text-emerald-700">{ok}</p>}
 
       <FormField label="Global role">
         <select
@@ -168,4 +182,4 @@ export function RoleAssignmentPanel({ userId }: Props) {
       </button>
     </div>
   )
-}
+})

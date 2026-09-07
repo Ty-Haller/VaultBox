@@ -153,8 +153,8 @@ export const api = {
   getPortfolioHistory(): Promise<PortfolioSnapshot[]> {
     return request('/portfolio-history/')
   },
-  seedData(): Promise<{ status: string; sites: number; vaults: number; holdings: number }> {
-    return request('/seed/', { method: 'POST' })
+  seedData(confirm: string): Promise<{ status: string; sites: number; vaults: number; holdings: number }> {
+    return request('/seed/', { method: 'POST', body: JSON.stringify({ confirm }) })
   },
 
   uploadPhoto(file: File, opts: { holding?: string; vault?: string; site?: string; caption?: string; isPrimary?: boolean }): Promise<Photo> {

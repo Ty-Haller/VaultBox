@@ -314,6 +314,9 @@ class SeedDataView(FullAdminMixin, APIView):
 
         from .models import Holding, Site, Vault
 
+        confirm = str(request.data.get('confirm') or '').strip()
+        if confirm != 'RESET':
+            return Response({'error': 'Type RESET (all caps) to confirm.'}, status=400)
         call_command('seed_data', flush=True)
         return Response({
             'status': 'seeded',

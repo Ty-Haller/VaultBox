@@ -12,6 +12,14 @@ class SiteConfigView(AdminWriteMixin, APIView):
         return Response(get_site_config(request))
 
     def patch(self, request):
+        from public_demo.flags import enabled as public_demo_enabled
+        if public_demo_enabled() and (
+            'hostname' in request.data or 'useHttps' in request.data
+        ):
+            return Response(
+                {'error': 'Hostname and HTTPS cannot be changed on the public demo.'},
+                status=403,
+            )
         try:
             return Response(save_site_config(request.data, request))
         except ValueError as exc:
@@ -25,9 +33,9 @@ class StalePasskeyView(UserAdminMixin, APIView):
         return Response(stale_passkey_summary(request))
 
     def post(self, request):
-        confirm = str(request.data.get('confirm') or '').strip().upper()
+        confirm = str(request.data.get('confirm') or '').strip()
         if confirm != 'PURGE':
-            return Response({'error': 'Type PURGE to confirm.'}, status=400)
+            return Response({'error': 'Type PURGE (all caps) to confirm.'}, status=400)
         try:
             return Response(purge_stale_passkeys(request))
         except StalePasskeyError as exc:

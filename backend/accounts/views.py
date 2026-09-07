@@ -146,6 +146,9 @@ class BootstrapPasskeyBeginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        from public_demo.flags import enabled as public_demo_enabled
+        if public_demo_enabled():
+            return Response({'error': 'Bootstrap not available'}, status=403)
         reason = _bootstrap_reason(request)
         if not reason:
             return Response({'error': 'Bootstrap not available'}, status=403)
@@ -165,6 +168,9 @@ class BootstrapPasskeyFinishView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        from public_demo.flags import enabled as public_demo_enabled
+        if public_demo_enabled():
+            return Response({'error': 'Bootstrap not available'}, status=403)
         if not _bootstrap_reason(request):
             return Response({'error': 'Bootstrap not available'}, status=403)
         user = _bootstrap_user()

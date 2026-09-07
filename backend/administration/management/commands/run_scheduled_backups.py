@@ -7,6 +7,10 @@ class Command(BaseCommand):
     help = 'Run scheduled VaultBox backup if enabled in admin backup schedule settings.'
 
     def handle(self, *args, **options):
+        from public_demo.flags import enabled as public_demo_enabled
+        if public_demo_enabled():
+            self.stdout.write('Backups are disabled on the public demo.')
+            return
         try:
             record = run_scheduled_backup()
         except Exception as exc:

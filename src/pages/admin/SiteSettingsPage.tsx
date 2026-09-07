@@ -5,6 +5,7 @@ import { adminApi } from '../../lib/adminApi'
 import type { HostnameSource, SiteConfig, UseHttpsSource } from '../../types/site'
 import { Card, CardHeader } from '../../components/ui/Card'
 import { FormField, inputClass } from '../../components/ui/FormField'
+import { useDemo } from '../../context/DemoContext'
 
 const HOST_SOURCE: Record<HostnameSource, string> = {
   admin: 'Admin override',
@@ -26,6 +27,7 @@ function rpIdFor(hostname: string): string {
 }
 
 export function SiteSettingsPage() {
+  const { publicDemo } = useDemo()
   const [config, setConfig] = useState<SiteConfig | null>(null)
   const [hostname, setHostname] = useState('')
   const [useHttps, setUseHttps] = useState(false)
@@ -64,6 +66,7 @@ export function SiteSettingsPage() {
   const rpIdWillChange = Boolean(config && draftRpId !== config.webauthnRpId)
 
   const save = async () => {
+    if (publicDemo) return
     if (rpIdWillChange) {
       const ok = window.confirm(
         `This changes the passkey RP ID from "${config?.webauthnRpId}" to "${draftRpId}".\n\nExisting passkeys will not work at the new host — including yours. After save, open the new App URL and register a new admin passkey (login will offer bootstrap). Keep this session open until that succeeds if you may need to revert.\n\nContinue?`,
@@ -130,12 +133,20 @@ export function SiteSettingsPage() {
         </div>
       </div>
 
+      {publicDemo && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          Public demo locks hostname, HTTPS, and the WebAuthn RP ID so passkeys stay valid for everyone until the next wipe.
+        </div>
+      )}
+
+      {!publicDemo && (
       <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
         Passkeys are bound to the RP ID. After a hostname change, open the new App URL and{' '}
         <strong>register a new admin passkey</strong> (login offers bootstrap because this host has no keys yet).
         Old passkeys keep working only if you revert to the previous host. Keep this session open until the new key
         is enrolled if you may need to revert.
       </div>
+      )}
 
       {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       {success && <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{success}</p>}
@@ -190,6 +201,7 @@ export function SiteSettingsPage() {
               value={hostname}
               onChange={(e) => setHostname(e.target.value)}
               placeholder={config?.envHostname || config?.detectedHostname || 'localhost'}
+              disabled={publicDemo}
             />
           </FormField>
 
@@ -232,7 +244,7 @@ export function SiteSettingsPage() {
           <button
             type="button"
             onClick={() => void save()}
-            disabled={saving}
+            disabled={saving || publicDemo}
             className="flex items-center gap-2 rounded-md bg-gold-500 px-4 py-2 text-sm font-medium text-white hover:bg-gold-600 disabled:opacity-50"
           >
             <Save className="h-4 w-4" />

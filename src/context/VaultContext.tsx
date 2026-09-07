@@ -161,7 +161,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const resetData = useCallback(async () => {
-    const result = await api.seedData()
+    const result = await api.seedData('RESET')
     await refresh()
     return {
       sites: result?.sites ?? 0,

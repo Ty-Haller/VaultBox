@@ -2,6 +2,7 @@ import logging
 
 from django.http import FileResponse
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -21,8 +22,15 @@ from .serializers import BackupRecordSerializer
 
 logger = logging.getLogger(__name__)
 
+class DemoBackupsDisabledMixin:
+    def initial(self, request, *args, **kwargs):
+        from public_demo.flags import enabled as public_demo_enabled
+        if public_demo_enabled() and request.method not in ('GET', 'HEAD', 'OPTIONS'):
+            raise PermissionDenied('Backups are disabled on the public demo.')
+        return super().initial(request, *args, **kwargs)
 
-class BackupListCreateView(AdminWriteMixin, APIView):
+
+class BackupListCreateView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
     def get(self, request):
         records = BackupRecord.objects.exclude(trigger='pre_restore').order_by('-created_at')[:100]
         return Response(BackupRecordSerializer(records, many=True).data)
@@ -50,14 +58,14 @@ class BackupListCreateView(AdminWriteMixin, APIView):
             return Response({'error': 'Backup failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class BackupDetailView(AdminWriteMixin, APIView):
+class BackupDetailView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
     def delete(self, request, backup_id):
         if not delete_backup(backup_id):
             return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class BackupDownloadView(AdminWriteMixin, APIView):
+class BackupDownloadView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
     def get(self, request, backup_id):
         path = get_backup_file_path(backup_id)
         if not path:
@@ -68,7 +76,7 @@ class BackupDownloadView(AdminWriteMixin, APIView):
         return response
 
 
-class BackupRestoreView(AdminWriteMixin, APIView):
+class BackupRestoreView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
     def post(self, request, backup_id):
         if request.data.get('confirm') != 'RESTORE':
             return Response({'error': 'Confirmation required'}, status=status.HTTP_400_BAD_REQUEST)
@@ -88,7 +96,7 @@ class BackupRestoreView(AdminWriteMixin, APIView):
             return Response({'error': 'Restore failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class BackupUploadRestoreView(AdminWriteMixin, APIView):
+class BackupUploadRestoreView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
     def post(self, request):
         uploaded = request.FILES.get('file')
         confirm = request.POST.get('confirm') or request.data.get('confirm')
@@ -114,7 +122,7 @@ class BackupUploadRestoreView(AdminWriteMixin, APIView):
             return Response({'error': 'Restore failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class BackupScheduleView(AdminWriteMixin, APIView):
+class BackupScheduleView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
     def get(self, request):
         from .backup_config import get_backup_schedule_internal
         data = get_backup_schedule()
@@ -134,7 +142,7 @@ class BackupScheduleView(AdminWriteMixin, APIView):
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class BackupRcloneView(AdminWriteMixin, APIView):
+class BackupRcloneView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
     def get(self, request):
         return Response(get_rclone_config())
 
@@ -142,7 +150,7 @@ class BackupRcloneView(AdminWriteMixin, APIView):
         return Response(save_rclone_config(request.data))
 
 
-class BackupRcloneTestView(AdminWriteMixin, APIView):
+class BackupRcloneTestView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
     def post(self, request):
         remote_id = request.data.get('remoteId')
         if not remote_id:
@@ -151,7 +159,7 @@ class BackupRcloneTestView(AdminWriteMixin, APIView):
         return Response({'ok': ok, 'error': None if ok else 'rclone test failed'})
 
 
-class BackupStorageInfoView(AdminWriteMixin, APIView):
+class BackupStorageInfoView(DemoBackupsDisabledMixin, AdminWriteMixin, APIView):
     def get(self, request):
         root = backup_root()
         total_size = sum(f.stat().st_size for f in root.glob('*') if f.is_file())
