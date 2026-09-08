@@ -19,6 +19,7 @@ import {
   DatabaseBackup,
   LogIn,
   Globe,
+  Info,
 } from 'lucide-react'
 import { useAdmin } from '../../context/AdminContext'
 import { useAuth } from '../../context/AuthContext'
@@ -97,6 +98,7 @@ const groups: { title: string; blurb: string; items: AdminLink[] }[] = [
       { to: '/admin/site', label: 'Site & Hostname', icon: Globe, countKey: null, desc: 'Public DNS name, URLs, passkeys & SSO' },
       { to: '/admin/settings', label: 'Other Settings', icon: Settings, countKey: 'settings', desc: 'App configuration' },
       { to: '/admin/backups', label: 'Backups', icon: DatabaseBackup, countKey: null, desc: 'On-demand & scheduled backups, encryption, rclone' },
+      { to: '/admin/about', label: 'About', icon: Info, countKey: null, desc: 'Version, license, and project links' },
     ],
   },
 ]

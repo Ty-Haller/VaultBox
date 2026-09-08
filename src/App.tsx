@@ -29,6 +29,7 @@ import { AuditFormPage } from './pages/AuditFormPage'
 import { AuditStartPage } from './pages/AuditStartPage'
 import { Secrets } from './pages/Secrets'
 import { AdminDashboard } from './pages/admin/AdminDashboard'
+import { AboutPage } from './pages/admin/AboutPage'
 import { PriceTickerSettings } from './pages/admin/PriceTickerSettings'
 import { AppSettingsPage } from './pages/admin/AppSettingsPage'
 import { NotificationDefaultsPage } from './pages/admin/NotificationDefaultsPage'
@@ -110,6 +111,7 @@ export default function App() {
                 <Route path="secrets" element={<Secrets />} />
                 <Route path="settings" element={<UserSettingsPage />} />
                 <Route path="admin" element={<AdminDashboard />} />
+                <Route path="admin/about" element={<AboutPage />} />
                 <Route path="admin/site-types" element={<AdminModelPage config={SITE_TYPE_CONFIG} />} />
                 <Route path="admin/vault-types" element={<AdminModelPage config={VAULT_TYPE_CONFIG} />} />
                 <Route path="admin/metal-types" element={<AdminModelPage config={METAL_TYPE_CONFIG} />} />

@@ -28,6 +28,9 @@ export function Header() {
   if (segments[0] === 'prices' && segments.length >= 3) {
     title = 'Price Chart'
   }
+  if (segments[0] === 'admin' && segments[1] === 'about') {
+    title = 'About'
+  }
 
   const urlQuery = pathname.startsWith('/inventory') ? (searchParams.get('q') ?? '') : ''
   const [query, setQuery] = useState(urlQuery)
