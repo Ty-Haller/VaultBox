@@ -1,7 +1,7 @@
 {
   "name": "vaultbox",
   "private": true,
-  "version": "0.1.1-beta",
+  "version": "0.1.2-beta",
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {

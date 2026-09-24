@@ -7,7 +7,7 @@
 **Hard asset inventory** for bullion, crypto, and other vaulted goods. Local-first: you run it on your machine. It is not a public internet service.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-e8b923?labelColor=111b24)](LICENSE)
-[![Status](https://img.shields.io/badge/status-0.1.1--beta-8aa4bc?labelColor=111b24)](README.md)
+[![Status](https://img.shields.io/badge/status-0.1.2--beta-8aa4bc?labelColor=111b24)](README.md)
 [![Live demo](https://img.shields.io/badge/LIVE%20DEMO-demo.vaultboxoss.com-e8b923?labelColor=111b24)](https://demo.vaultboxoss.com)
 
 Passkeys (WebAuthn) are the sign-in method. Use **http://localhost:5173** in development, or the container App URL — `127.0.0.1` will fail passkey registration.
