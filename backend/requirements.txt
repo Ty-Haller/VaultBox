@@ -1,7 +1,7 @@
 django>=6.1.1,<7
 djangorestframework>=3.18.1,<4
 django-cors-headers>=4.9.0,<5
-Pillow>=12.3.0,<13
+Pillow>=13.0.0,<14
 qrcode>=8.2,<9
 reportlab>=5.0.1,<6
 requests>=2.34.2,<3
