@@ -9,6 +9,6 @@ apprise>=1.13.1,<2
 python-slugify>=9.0.0,<10
 cryptography>=50.0.1,<51
 webauthn>=3.0.0,<4
-authlib>=1.8.0,<2
+authlib>=1.9.1,<2
 gunicorn>=26.2.0,<27
 whitenoise>=6.12.0,<7
